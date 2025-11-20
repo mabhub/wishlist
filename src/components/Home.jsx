@@ -17,6 +17,7 @@ import { toggle } from '../utils/array';
 const Home = () => {
   const [disabledCategories, setDisabledCategories] = React.useState([]);
   const [viewMode, setViewMode] = React.useState('grid'); // 'list' ou 'grid'
+  const [flippedCard, setFlippedCard] = React.useState(null);
   const { data, isLoading, error } = useWishlist();
 
   const items = React.useMemo(() => data?.items || [], [data?.items]);
@@ -117,7 +118,11 @@ const Home = () => {
         <Grid container spacing={2}>
           {filteredItem.map(item => (
             <Grid key={item.title} xs={12} sm={6} md={3}>
-              <WishlistItemCard {...item} />
+              <WishlistItemCard
+                {...item}
+                isFlipped={flippedCard === item.title}
+                onFlip={setFlippedCard}
+              />
             </Grid>
           ))}
         </Grid>
