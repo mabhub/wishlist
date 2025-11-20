@@ -28,6 +28,7 @@ module.exports = {
     'import/no-extraneous-dependencies': [warn, { devDependencies: ['**/*.test.js', '**/*.spec.js', '**/*.stories.js'] }],
     'import/no-named-as-default': [off],
     'import/no-unresolved': [warn],
+    'import/prefer-default-export': [off],
 
     'jsx-a11y/anchor-is-valid': [error, { specialLink: ['to'] }],
     'jsx-a11y/label-has-for': [error, { required: { some: ['nesting', 'id'] } }],

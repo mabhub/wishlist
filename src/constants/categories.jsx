@@ -2,6 +2,10 @@ import {
   Album as AlbumIcon,
   DirectionsBike as DirectionsBikeIcon,
   Home as HomeIcon,
+  Devices as DevicesIcon,
+  Build as BuildIcon,
+  MenuBook as MenuBookIcon,
+  Sensors as SensorsIcon,
 } from '@mui/icons-material';
 
 /**
@@ -14,6 +18,11 @@ import {
  * categoryProps['Vinyle'] // { icon: <AlbumIcon />, color: 'primary' }
  */
 export const categoryProps = {
+  BD: {
+    icon: <MenuBookIcon />,
+    color: 'error',
+    sx: { pl: 0.5 },
+  },
   Vinyle: {
     icon: <AlbumIcon />,
     color: 'primary',
@@ -26,6 +35,21 @@ export const categoryProps = {
   Maison: {
     icon: <HomeIcon />,
     color: 'info',
+    sx: { pl: 0.5 },
+  },
+  'High-tech': {
+    icon: <DevicesIcon />,
+    color: 'secondary',
+    sx: { pl: 0.5 },
+  },
+  Bricolage: {
+    icon: <BuildIcon />,
+    color: 'success',
+    sx: { pl: 0.5 },
+  },
+  Domotique: {
+    icon: <SensorsIcon />,
+    color: 'warning',
     sx: { pl: 0.5 },
   },
 };

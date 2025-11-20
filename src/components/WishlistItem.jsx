@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, ButtonBase, Chip, Paper, Typography } from '@mui/material';
+import ReactMarkdown from 'react-markdown';
 import CategoryChip from './CategoryChip';
 
 const blankImage = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect x="0" y="0" width="200" height="200" fill="white" /></svg>';
@@ -62,8 +63,8 @@ const WishlistItem = ({ title, link, description, brand, picture, categories = [
           ))}
         </Typography>
 
-        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }} color="text.secondary">
-          {description}
+        <Typography variant="body2" component="div" color="text.secondary" sx={{ '& p': { my: 0.5 }, '& a': { color: 'primary.main' } }}>
+          <ReactMarkdown>{description}</ReactMarkdown>
         </Typography>
       </Box>
     </ButtonBase>

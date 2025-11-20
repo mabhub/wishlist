@@ -33,7 +33,7 @@ const Home = () => {
   );
 
   const sortedItems = React.useMemo(
-    () => items.toSorted(({ weight: a }, { weight: b }) => a - b),
+    () => items.toSorted(({ weight: a = 999 }, { weight: b = 999 }) => a - b),
     [items],
   );
 
