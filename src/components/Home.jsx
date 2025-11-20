@@ -16,7 +16,7 @@ import { toggle } from '../utils/array';
  */
 const Home = () => {
   const [disabledCategories, setDisabledCategories] = React.useState([]);
-  const [viewMode, setViewMode] = React.useState('list'); // 'list' ou 'grid'
+  const [viewMode, setViewMode] = React.useState('grid'); // 'list' ou 'grid'
   const { data, isLoading, error } = useWishlist();
 
   const items = React.useMemo(() => data?.items || [], [data?.items]);
