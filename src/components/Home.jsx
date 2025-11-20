@@ -1,7 +1,10 @@
 import React from 'react';
-import { Alert, CircularProgress, Container, Divider } from '@mui/material';
+import { Alert, Box, CircularProgress, Container, Divider, IconButton, Tooltip } from '@mui/material';
+import { ViewList as ViewListIcon, ViewModule as ViewModuleIcon } from '@mui/icons-material';
+import Grid from '@mui/material/Unstable_Grid2';
 
 import WishlistItem from './WishlistItem';
+import WishlistItemCard from './WishlistItemCard';
 import CategoryChip from './CategoryChip';
 import useWishlist from '../hooks/useWishlist';
 import { toggle } from '../utils/array';
@@ -13,6 +16,7 @@ import { toggle } from '../utils/array';
  */
 const Home = () => {
   const [disabledCategories, setDisabledCategories] = React.useState([]);
+  const [viewMode, setViewMode] = React.useState('list'); // 'list' ou 'grid'
   const { data, isLoading, error } = useWishlist();
 
   const items = React.useMemo(() => data?.items || [], [data?.items]);
@@ -31,6 +35,10 @@ const Home = () => {
     },
     [allCategories],
   );
+
+  const toggleViewMode = React.useCallback(() => {
+    setViewMode(prevMode => (prevMode === 'list' ? 'grid' : 'list'));
+  }, []);
 
   const sortedItems = React.useMemo(
     () => items.toSorted(({ weight: a = 999 }, { weight: b = 999 }) => a - b),
@@ -70,30 +78,50 @@ const Home = () => {
 
   return (
     <Container sx={{ py: 4 }}>
-      <CategoryChip
-        label="Tout"
-        onClick={handleChipClick()}
-        aria-pressed={disabledCategories.length === 0}
-      />
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <Box sx={{ flexGrow: 1 }}>
+          <CategoryChip
+            label="Tout"
+            onClick={handleChipClick()}
+            aria-pressed={disabledCategories.length === 0}
+          />
 
-      {allCategories.map(category => (
-        <CategoryChip
-          key={category}
-          label={category}
-          onClick={handleChipClick(category)}
-          aria-pressed={!disabledCategories.includes(category)}
-          sx={{
-            opacity: disabledCategories.includes(category) ? 0.2 : 1,
-            ml: 1,
-          }}
-        />
-      ))}
+          {allCategories.map(category => (
+            <CategoryChip
+              key={category}
+              label={category}
+              onClick={handleChipClick(category)}
+              aria-pressed={!disabledCategories.includes(category)}
+              sx={{
+                opacity: disabledCategories.includes(category) ? 0.2 : 1,
+                ml: 1,
+              }}
+            />
+          ))}
+        </Box>
+
+        <Tooltip title={viewMode === 'list' ? 'Affichage en grille' : 'Affichage en liste'}>
+          <IconButton onClick={toggleViewMode} aria-label="Changer le mode d'affichage">
+            {viewMode === 'list' ? <ViewModuleIcon /> : <ViewListIcon />}
+          </IconButton>
+        </Tooltip>
+      </Box>
 
       <Divider sx={{ my: 2 }} />
 
-      {filteredItem.map(item => (
-        <WishlistItem key={item.title} {...item} />
-      ))}
+      {viewMode === 'list' ? (
+        filteredItem.map(item => (
+          <WishlistItem key={item.title} {...item} />
+        ))
+      ) : (
+        <Grid container spacing={2}>
+          {filteredItem.map(item => (
+            <Grid key={item.title} xs={12} sm={6} md={3}>
+              <WishlistItemCard {...item} />
+            </Grid>
+          ))}
+        </Grid>
+      )}
     </Container>
   );
 };
