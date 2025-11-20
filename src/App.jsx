@@ -5,13 +5,24 @@ import {
 } from 'react-router-dom';
 
 import Home from './components/Home';
+import ErrorBoundary from './components/ErrorBoundary';
 
+/**
+ * Composant racine de l'application.
+ * Gère le routing principal avec React Router.
+ *
+ * @returns {JSX.Element} Application avec routing
+ */
 const App = () => (
-  <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<Home />} />
-    </Routes>
-  </BrowserRouter>
+  <ErrorBoundary>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+      </Routes>
+    </BrowserRouter>
+  </ErrorBoundary>
 );
+
+App.displayName = 'App';
 
 export default App;

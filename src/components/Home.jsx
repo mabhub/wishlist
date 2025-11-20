@@ -1,16 +1,17 @@
 import React from 'react';
-import { Container, Divider } from '@mui/material';
+import { Alert, CircularProgress, Container, Divider } from '@mui/material';
 
 import WishlistItem from './WishlistItem';
-// import { items } from '../data.json';
 import CategoryChip from './CategoryChip';
-import useData from '../useData';
+import useWishlist from '../hooks/useWishlist';
 
-// const allCategories = Array.from(items.reduce((acc, { categories = [] }) => {
-//   categories.length && acc.add(...categories);
-//   return acc;
-// }, new Set()));
-
+/**
+ * Bascule la présence d'une valeur dans un tableau.
+ *
+ * @param {Array} [array=[]] - Tableau source
+ * @param {string} [str] - Valeur à basculer
+ * @returns {Array} Nouveau tableau avec la valeur ajoutée ou retirée
+ */
 const toggle = (array = [], str = undefined) => {
   const arr = array.slice();
   if (typeof str !== 'string') {
@@ -28,9 +29,17 @@ const toggle = (array = [], str = undefined) => {
   return arr;
 };
 
+/**
+ * Page d'accueil affichant la wishlist complète avec filtrage par catégories.
+ *
+ * @returns {JSX.Element} Page Home avec liste filtrée
+ */
 const Home = () => {
   const [disabledCategories, setDisabledCategories] = React.useState([]);
-  const [items, allCategories] = useData();
+  const { data, isLoading, error } = useWishlist();
+
+  const items = data?.items || [];
+  const allCategories = data?.categories || [];
 
   const handleChipClick = React.useCallback(
     (category = 'all') => () => {
@@ -64,6 +73,24 @@ const Home = () => {
     [disabledCategories, sortedItems],
   );
 
+  if (isLoading) {
+    return (
+      <Container sx={{ py: 4, display: 'flex', justifyContent: 'center' }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container sx={{ py: 4 }}>
+        <Alert severity="error">
+          Erreur lors du chargement de la wishlist : {error.message}
+        </Alert>
+      </Container>
+    );
+  }
+
   return (
     <Container sx={{ py: 4 }}>
       <CategoryChip label="Tout" onClick={handleChipClick()} />
@@ -88,5 +115,7 @@ const Home = () => {
     </Container>
   );
 };
+
+Home.displayName = 'Home';
 
 export default Home;
