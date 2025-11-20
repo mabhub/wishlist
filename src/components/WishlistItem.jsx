@@ -21,6 +21,7 @@ const WishlistItem = ({ title, link, description, brand, picture, categories = [
   <Paper sx={{ mt: 2, px: 1, py: 1 }}>
     <ButtonBase
       href={link || '#'}
+      aria-label={`Voir les détails de ${title}`}
       sx={{
         flexGrow: 1,
         justifyContent: 'flex-start',

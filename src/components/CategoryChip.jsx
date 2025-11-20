@@ -1,31 +1,6 @@
 import React from 'react';
 import { Chip } from '@mui/material';
-import {
-  Album as AlbumIcon,
-  DirectionsBike as DirectionsBikeIcon,
-  Home as HomeIcon,
-} from '@mui/icons-material';
-
-/**
- * Configuration des propriétés visuelles par catégorie.
- * @type {Object.<string, {icon: JSX.Element, color: string, sx?: Object}>}
- */
-const categoryProps = {
-  Vinyle: {
-    icon: <AlbumIcon />,
-    color: 'primary',
-  },
-  Vélo: {
-    icon: <DirectionsBikeIcon />,
-    color: 'warning',
-    sx: { pl: 0.5 },
-  },
-  Maison: {
-    icon: <HomeIcon />,
-    color: 'info',
-    sx: { pl: 0.5 },
-  },
-};
+import { categoryProps } from '../constants/categories';
 
 /**
  * Fusionne les props customisées d'une catégorie avec les props passées.
