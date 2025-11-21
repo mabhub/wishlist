@@ -45,6 +45,7 @@ const WishlistItemCard = ({
   return (
     <Box
       sx={{
+        width: '100%',
         perspective: '1000px',
         cursor: description ? 'pointer' : 'default',
       }}
@@ -53,6 +54,7 @@ const WishlistItemCard = ({
       <Box
         sx={{
           position: 'relative',
+          height: '100%',
           transformStyle: 'preserve-3d',
           transition: 'transform 0.6s',
           transform: isFlipped && description ? 'rotateY(180deg)' : 'rotateY(0deg)',
@@ -61,6 +63,7 @@ const WishlistItemCard = ({
         {/* Face avant */}
         <Card
           sx={{
+            height: '100%',
             display: 'flex',
             flexDirection: 'column',
             backfaceVisibility: 'hidden',

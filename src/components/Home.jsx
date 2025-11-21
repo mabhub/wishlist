@@ -117,7 +117,7 @@ const Home = () => {
       ) : (
         <Grid container spacing={2}>
           {filteredItem.map(item => (
-            <Grid key={item.title} xs={12} sm={6} md={3}>
+            <Grid key={item.title} xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
               <WishlistItemCard
                 {...item}
                 isFlipped={flippedCard === item.title}
