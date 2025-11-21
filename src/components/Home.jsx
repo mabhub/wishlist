@@ -1,6 +1,7 @@
 import React from 'react';
 import { Alert, Box, CircularProgress, Container, Divider, IconButton, Tooltip, Typography } from '@mui/material';
 import { ViewList as ViewListIcon, ViewModule as ViewModuleIcon } from '@mui/icons-material';
+import { Link, useParams } from 'react-router-dom';
 import Grid from '@mui/material/Unstable_Grid2';
 
 import WishlistItem from './WishlistItem';
@@ -8,6 +9,7 @@ import WishlistItemCard from './WishlistItemCard';
 import CategoryChip from './CategoryChip';
 import useWishlist from '../hooks/useWishlist';
 import useListInfo from '../hooks/useListInfo';
+import { BASEROW_CONFIG } from '../config/baserow';
 import { toggle } from '../utils/array';
 
 /**
@@ -16,6 +18,8 @@ import { toggle } from '../utils/array';
  * @returns {JSX.Element} Page Home avec liste filtrée
  */
 const Home = () => {
+  const { listId } = useParams();
+  const activeListId = listId || BASEROW_CONFIG.defaultListId;
   const [disabledCategories, setDisabledCategories] = React.useState([]);
   const [viewMode, setViewMode] = React.useState('grid'); // 'list' ou 'grid'
   const [flippedCard, setFlippedCard] = React.useState(null);
@@ -85,7 +89,15 @@ const Home = () => {
         <Box sx={{ mb: 3, textAlign: 'center' }}>
           {listInfo.title && (
             <Typography variant="h4" component="h1" gutterBottom>
-              {listInfo.title}
+              <Link
+                to={`/list/${activeListId}`}
+                style={{
+                  color: 'inherit',
+                  textDecoration: 'none',
+                }}
+              >
+                {listInfo.title}
+              </Link>
             </Typography>
           )}
           {listInfo.for && (
