@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Card, CardContent, CardMedia, Chip, IconButton, Tooltip, Typography } from '@mui/material';
-import { OpenInNew as OpenInNewIcon } from '@mui/icons-material';
+import { Link as LinkIcon } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
 import CategoryChip from './CategoryChip';
 
@@ -75,19 +75,16 @@ const WishlistItemCard = ({
                 onClick={handleLinkClick}
                 aria-label="Ouvrir le lien du produit"
                 href={link}
+                color="secondary"
                 sx={{
                   position: 'absolute',
                   top: 8,
                   right: 8,
+                  boxShadow: 2,
                   bgcolor: 'background.paper',
-                  boxShadow: 1,
-                  '&:hover': {
-                    bgcolor: 'background.paper',
-                    boxShadow: 2,
-                  },
                 }}
               >
-                <OpenInNewIcon fontSize="small" />
+                <LinkIcon fontSize="small" />
               </IconButton>
             </Tooltip>
           )}
