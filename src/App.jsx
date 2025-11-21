@@ -18,6 +18,7 @@ const App = () => (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/list/:listId" element={<Home />} />
       </Routes>
     </BrowserRouter>
   </ErrorBoundary>

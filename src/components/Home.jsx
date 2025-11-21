@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, Box, CircularProgress, Container, Divider, IconButton, Tooltip } from '@mui/material';
+import { Alert, Box, CircularProgress, Container, Divider, IconButton, Tooltip, Typography } from '@mui/material';
 import { ViewList as ViewListIcon, ViewModule as ViewModuleIcon } from '@mui/icons-material';
 import Grid from '@mui/material/Unstable_Grid2';
 
@@ -7,6 +7,7 @@ import WishlistItem from './WishlistItem';
 import WishlistItemCard from './WishlistItemCard';
 import CategoryChip from './CategoryChip';
 import useWishlist from '../hooks/useWishlist';
+import useListInfo from '../hooks/useListInfo';
 import { toggle } from '../utils/array';
 
 /**
@@ -19,6 +20,7 @@ const Home = () => {
   const [viewMode, setViewMode] = React.useState('grid'); // 'list' ou 'grid'
   const [flippedCard, setFlippedCard] = React.useState(null);
   const { data, isLoading, error } = useWishlist();
+  const { data: listInfo, isLoading: isLoadingList } = useListInfo();
 
   const items = React.useMemo(() => data?.items || [], [data?.items]);
   const allCategories = React.useMemo(() => data?.categories || [], [data?.categories]);
@@ -59,7 +61,7 @@ const Home = () => {
     [disabledCategories, sortedItems],
   );
 
-  if (isLoading) {
+  if (isLoading || isLoadingList) {
     return (
       <Container sx={{ py: 4, display: 'flex', justifyContent: 'center' }}>
         <CircularProgress />
@@ -79,6 +81,21 @@ const Home = () => {
 
   return (
     <Container sx={{ py: 4 }}>
+      {listInfo && (
+        <Box sx={{ mb: 3, textAlign: 'center' }}>
+          {listInfo.title && (
+            <Typography variant="h4" component="h1" gutterBottom>
+              {listInfo.title}
+            </Typography>
+          )}
+          {listInfo.for && (
+            <Typography variant="subtitle1" color="text.secondary">
+              Pour {listInfo.for}
+            </Typography>
+          )}
+        </Box>
+      )}
+
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
         <Box sx={{ flexGrow: 1 }}>
           <CategoryChip
