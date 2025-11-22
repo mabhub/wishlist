@@ -14,6 +14,7 @@ import {
  */
 const transformBaserowData = baserowItems => {
   const items = baserowItems.map(item => ({
+    uuid: item.uuid || '',
     title: item.title || '',
     brand: item.brand || '',
     description: item.description || '',

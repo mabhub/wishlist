@@ -1,8 +1,9 @@
 import React from 'react';
-import { Box, Card, CardContent, CardMedia, Chip, IconButton, Tooltip, Typography } from '@mui/material';
-import { Link as LinkIcon } from '@mui/icons-material';
+import { Box, Button, Card, CardContent, CardMedia, Chip, CircularProgress, IconButton, Tooltip, Typography } from '@mui/material';
+import { Link as LinkIcon, CardGiftcard as CardGiftcardIcon } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
 import CategoryChip from './CategoryChip';
+import ReservationDialog from './ReservationDialog';
 
 const blankImage = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect x="0" y="0" width="200" height="200" fill="white" /></svg>';
 
@@ -10,6 +11,7 @@ const blankImage = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" w
  * Composant affichant un item de wishlist en mode vignette (card).
  *
  * @param {Object} props - Props du composant
+ * @param {string} props.uuid - UUID unique de l'item
  * @param {string} props.title - Titre de l'item
  * @param {string} [props.link] - Lien URL de l'item
  * @param {string} [props.brand] - Marque de l'item
@@ -19,9 +21,15 @@ const blankImage = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" w
  * @param {string} [props.description] - Description complète du produit
  * @param {boolean} [props.isFlipped=false] - État de retournement de la carte
  * @param {Function} [props.onFlip] - Callback pour gérer le retournement
+ * @param {boolean} [props.giftMode=false] - Mode offrir activé
+ * @param {boolean} [props.isLoadingReservations=false] - Chargement des réservations en cours
+ * @param {boolean} [props.isReserved=false] - Si true, l'élément est réservé
+ * @param {Object} [props.reservation] - Informations de réservation (comment)
+ * @param {Function} [props.onReserve] - Callback pour réserver un élément
  * @returns {JSX.Element} Item de wishlist en mode card
  */
 const WishlistItemCard = ({
+  uuid,
   title,
   link,
   brand,
@@ -31,7 +39,13 @@ const WishlistItemCard = ({
   description,
   isFlipped = false,
   onFlip,
+  giftMode = false,
+  isLoadingReservations = false,
+  isReserved = false,
+  reservation = null,
+  onReserve,
 }) => {
+  const [dialogOpen, setDialogOpen] = React.useState(false);
   const handleCardClick = React.useCallback(() => {
     if (description && onFlip) {
       onFlip(isFlipped ? null : title);
@@ -41,6 +55,17 @@ const WishlistItemCard = ({
   const handleLinkClick = React.useCallback(event => {
     event.stopPropagation();
   }, []);
+
+  const handleReserveClick = React.useCallback(event => {
+    event.stopPropagation();
+    setDialogOpen(true);
+  }, []);
+
+  const handleReserveConfirm = React.useCallback(comment => {
+    if (onReserve) {
+      onReserve({ wishId: uuid, comment });
+    }
+  }, [onReserve, uuid]);
 
   return (
     <Box
@@ -67,6 +92,7 @@ const WishlistItemCard = ({
             display: 'flex',
             flexDirection: 'column',
             backfaceVisibility: 'hidden',
+            opacity: isReserved ? 0.75 : 1,
           }}
         >
           {link && (
@@ -121,6 +147,34 @@ const WishlistItemCard = ({
                 />
               ))}
             </Box>
+
+            {giftMode && (
+              <Box sx={{ mt: 2 }}>
+                {isLoadingReservations ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : isReserved ? (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CardGiftcardIcon color="primary" fontSize="small" />
+                    <Typography variant="caption" color="primary">
+                      Déjà réservé
+                      {reservation?.comment && ` - ${reservation.comment}`}
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    fullWidth
+                    startIcon={<CardGiftcardIcon />}
+                    onClick={handleReserveClick}
+                  >
+                    Réserver
+                  </Button>
+                )}
+              </Box>
+            )}
           </CardContent>
         </Card>
 
@@ -165,6 +219,13 @@ const WishlistItemCard = ({
           </Card>
         )}
       </Box>
+
+      <ReservationDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        onConfirm={handleReserveConfirm}
+        itemTitle={title}
+      />
     </Box>
   );
 };

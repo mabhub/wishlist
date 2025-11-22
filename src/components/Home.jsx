@@ -1,6 +1,6 @@
 import React from 'react';
 import { Alert, Box, CircularProgress, Container, Divider, IconButton, Tooltip, Typography } from '@mui/material';
-import { ViewList as ViewListIcon, ViewModule as ViewModuleIcon } from '@mui/icons-material';
+import { ViewList as ViewListIcon, ViewModule as ViewModuleIcon, CardGiftcard as CardGiftcardIcon } from '@mui/icons-material';
 import { Link, useParams } from 'react-router-dom';
 import Grid from '@mui/material/Unstable_Grid2';
 
@@ -9,6 +9,7 @@ import WishlistItemCard from './WishlistItemCard';
 import CategoryChip from './CategoryChip';
 import useWishlist from '../hooks/useWishlist';
 import useListInfo from '../hooks/useListInfo';
+import useReservations from '../hooks/useReservations';
 import { BASEROW_CONFIG } from '../config/baserow';
 import { toggle } from '../utils/array';
 
@@ -22,9 +23,11 @@ const Home = () => {
   const activeListId = listId || BASEROW_CONFIG.defaultListId;
   const [disabledCategories, setDisabledCategories] = React.useState([]);
   const [viewMode, setViewMode] = React.useState('grid'); // 'list' ou 'grid'
+  const [giftMode, setGiftMode] = React.useState(false); // Mode offrir
   const [flippedCard, setFlippedCard] = React.useState(null);
   const { data, isLoading, error } = useWishlist();
   const { data: listInfo, isLoading: isLoadingList } = useListInfo();
+  const { reservations, isLoading: isLoadingReservations, addReservation } = useReservations(giftMode);
 
   const items = React.useMemo(() => data?.items || [], [data?.items]);
   const allCategories = React.useMemo(() => data?.categories || [], [data?.categories]);
@@ -45,6 +48,10 @@ const Home = () => {
 
   const toggleViewMode = React.useCallback(() => {
     setViewMode(prevMode => (prevMode === 'list' ? 'grid' : 'list'));
+  }, []);
+
+  const toggleGiftMode = React.useCallback(() => {
+    setGiftMode(prev => !prev);
   }, []);
 
   const sortedItems = React.useMemo(
@@ -130,6 +137,16 @@ const Home = () => {
           ))}
         </Box>
 
+        <Tooltip title={giftMode ? 'Masquer les réservations' : 'Mode offrir'}>
+          <IconButton
+            onClick={toggleGiftMode}
+            aria-label="Activer le mode offrir"
+            color={giftMode ? 'primary' : 'default'}
+          >
+            <CardGiftcardIcon />
+          </IconButton>
+        </Tooltip>
+
         <Tooltip title={viewMode === 'list' ? 'Affichage en grille' : 'Affichage en liste'}>
           <IconButton onClick={toggleViewMode} aria-label="Changer le mode d'affichage">
             {viewMode === 'list' ? <ViewModuleIcon /> : <ViewListIcon />}
@@ -151,6 +168,11 @@ const Home = () => {
                 {...item}
                 isFlipped={flippedCard === item.title}
                 onFlip={setFlippedCard}
+                giftMode={giftMode}
+                isLoadingReservations={isLoadingReservations}
+                isReserved={giftMode && reservations[item.uuid]}
+                reservation={giftMode ? reservations[item.uuid] : null}
+                onReserve={addReservation}
               />
             </Grid>
           ))}

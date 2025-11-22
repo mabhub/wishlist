@@ -7,6 +7,7 @@ export const BASEROW_CONFIG = {
   databaseId: import.meta.env.VITE_BASEROW_DATABASE_ID || '',
   tableId: import.meta.env.VITE_BASEROW_ITEMS_TABLE_ID || '', // Table des items
   listsTableId: import.meta.env.VITE_BASEROW_LISTS_TABLE_ID || '', // Table des listes
+  reservationsTableId: import.meta.env.VITE_BASEROW_RESERVATIONS_TABLE_ID || '', // Table des réservations
   token: import.meta.env.VITE_BASEROW_TOKEN || '',
   defaultListId: import.meta.env.VITE_BASEROW_DEFAULT_LIST_ID || '',
 };
