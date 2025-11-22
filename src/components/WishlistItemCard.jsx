@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Button, Card, CardContent, CardMedia, Chip, CircularProgress, IconButton, Tooltip, Typography } from '@mui/material';
-import { Link as LinkIcon, CardGiftcard as CardGiftcardIcon } from '@mui/icons-material';
+import { Link as LinkIcon } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
 import CategoryChip from './CategoryChip';
 import ReservationDialog from './ReservationDialog';
@@ -59,6 +59,10 @@ const WishlistItemCard = ({
   const handleReserveClick = React.useCallback(event => {
     event.stopPropagation();
     setDialogOpen(true);
+  }, []);
+
+  const handleDialogClose = React.useCallback(() => {
+    setDialogOpen(false);
   }, []);
 
   const handleReserveConfirm = React.useCallback(comment => {
@@ -135,39 +139,42 @@ const WishlistItemCard = ({
 
             <Typography variant="h6" component="h2" gutterBottom sx={{ flexGrow: 1, lineHeight: 1.2 }}>
               {qty > 1 && <Chip size="small" color="secondary" label={`${qty}×`} sx={{ mr: 0.5, mb: 0.5 }} />}
-              {title}
+              {title}{' '}
+              <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
+                {categories.map(category => (
+                  <CategoryChip
+                    variant="dot"
+                    label={category}
+                    key={category}
+                    sx={{ mr: 0.25 }}
+                  />
+                ))}
+              </Box>
             </Typography>
-
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
-              {categories.map(category => (
-                <CategoryChip
-                  size="small"
-                  label={category}
-                  key={category}
-                />
-              ))}
-            </Box>
 
             {giftMode && (
               <Box sx={{ mt: 2 }}>
-                {isLoadingReservations ? (
+                {isLoadingReservations && (
                   <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
                     <CircularProgress size={24} />
                   </Box>
-                ) : isReserved ? (
+                )}
+
+                {!isLoadingReservations && isReserved && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CardGiftcardIcon color="primary" fontSize="small" />
+                    🎁
                     <Typography variant="caption" color="primary">
                       Déjà réservé
                       {reservation?.comment && ` - ${reservation.comment}`}
                     </Typography>
                   </Box>
-                ) : (
+                )}
+
+                {!isLoadingReservations && !isReserved && (
                   <Button
-                    variant="outlined"
                     size="small"
                     fullWidth
-                    startIcon={<CardGiftcardIcon />}
+                    startIcon="🎁"
                     onClick={handleReserveClick}
                   >
                     Réserver
@@ -222,7 +229,7 @@ const WishlistItemCard = ({
 
       <ReservationDialog
         open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
+        onClose={handleDialogClose}
         onConfirm={handleReserveConfirm}
         itemTitle={title}
       />

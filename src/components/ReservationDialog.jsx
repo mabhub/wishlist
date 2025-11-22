@@ -34,7 +34,13 @@ const ReservationDialog = ({ open, onClose, onConfirm, itemTitle }) => {
   }, [onClose]);
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={handleClose} 
+      maxWidth="sm" 
+      fullWidth
+      onClick={(e) => e.stopPropagation()}
+    >
       <DialogTitle>Réserver cet élément</DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ mb: 2 }}>

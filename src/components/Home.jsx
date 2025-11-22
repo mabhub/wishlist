@@ -1,6 +1,6 @@
 import React from 'react';
 import { Alert, Box, CircularProgress, Container, Divider, IconButton, Tooltip, Typography } from '@mui/material';
-import { ViewList as ViewListIcon, ViewModule as ViewModuleIcon, CardGiftcard as CardGiftcardIcon } from '@mui/icons-material';
+import { ViewList as ViewListIcon, ViewModule as ViewModuleIcon } from '@mui/icons-material';
 import { Link, useParams } from 'react-router-dom';
 import Grid from '@mui/material/Unstable_Grid2';
 
@@ -176,19 +176,20 @@ const Home = () => {
           ))}
         </Box>
 
+        <Tooltip title={viewMode === 'list' ? 'Affichage en grille' : 'Affichage en liste'}>
+          <IconButton onClick={toggleViewMode} aria-label="Changer le mode d'affichage">
+            {viewMode === 'list' ? <ViewModuleIcon /> : <ViewListIcon />}
+          </IconButton>
+        </Tooltip>
+
         <Tooltip title={giftMode ? 'Masquer les réservations' : 'Mode offrir'}>
           <IconButton
             onClick={toggleGiftMode}
             aria-label="Activer le mode offrir"
             color={giftMode ? 'primary' : 'default'}
+            sx={{ fontSize: '5rem' }}
           >
-            <CardGiftcardIcon />
-          </IconButton>
-        </Tooltip>
-
-        <Tooltip title={viewMode === 'list' ? 'Affichage en grille' : 'Affichage en liste'}>
-          <IconButton onClick={toggleViewMode} aria-label="Changer le mode d'affichage">
-            {viewMode === 'list' ? <ViewModuleIcon /> : <ViewListIcon />}
+            🎁
           </IconButton>
         </Tooltip>
       </Box>
