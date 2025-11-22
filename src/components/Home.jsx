@@ -13,6 +13,8 @@ import useReservations from '../hooks/useReservations';
 import { BASEROW_CONFIG } from '../config/baserow';
 import { toggle } from '../utils/array';
 
+const noop = () => {};
+
 /**
  * Page d'accueil affichant la wishlist complète avec filtrage par catégories.
  *
@@ -60,7 +62,7 @@ const Home = () => {
 
   // Désactiver automatiquement le mode offrir après 5 minutes d'inactivité
   React.useEffect(() => {
-    if (!giftMode) return;
+    if (!giftMode) return noop;
 
     const INACTIVITY_TIMEOUT = 2 * 60 * 1000; // 2 minutes
     let timeoutId;
