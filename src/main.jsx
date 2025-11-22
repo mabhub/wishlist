@@ -19,6 +19,9 @@ const theme = responsiveFontSizes(createTheme({
     primary: {
       main: '#adb31b',
     },
+    secondary: {
+      main: '#8252e2',
+    },
   },
 }));
 

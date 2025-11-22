@@ -26,7 +26,6 @@ const Home = () => {
   const [disabledCategories, setDisabledCategories] = React.useState([]);
   const [viewMode, setViewMode] = React.useState('grid'); // 'list' ou 'grid'
   const [giftMode, setGiftMode] = React.useState(false); // Mode offrir
-  const [flippedCard, setFlippedCard] = React.useState(null);
   const { data, isLoading, error } = useWishlist();
   const { data: listInfo, isLoading: isLoadingList } = useListInfo();
   const {
@@ -206,8 +205,6 @@ const Home = () => {
             <Grid key={item.title} xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
               <WishlistItemCard
                 {...item}
-                isFlipped={flippedCard === item.title}
-                onFlip={setFlippedCard}
                 giftMode={giftMode}
                 isLoadingReservations={isLoadingReservations}
                 isReserved={giftMode && reservations[item.uuid]}

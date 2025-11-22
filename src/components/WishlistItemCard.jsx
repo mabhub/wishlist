@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Button, Card, CardContent, CardMedia, Chip, CircularProgress, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, Button, Card, CardContent, CardMedia, Chip, CircularProgress, IconButton, Tab, Tabs, Tooltip, Typography } from '@mui/material';
 import { Link as LinkIcon } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
 import CategoryChip from './CategoryChip';
@@ -19,8 +19,6 @@ const blankImage = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" w
  * @param {string[]} [props.categories=[]] - Catégories associées
  * @param {number} [props.qty=1] - Quantité souhaitée
  * @param {string} [props.description] - Description complète du produit
- * @param {boolean} [props.isFlipped=false] - État de retournement de la carte
- * @param {Function} [props.onFlip] - Callback pour gérer le retournement
  * @param {boolean} [props.giftMode=false] - Mode offrir activé
  * @param {boolean} [props.isLoadingReservations=false] - Chargement des réservations en cours
  * @param {boolean} [props.isReserved=false] - Si true, l'élément est réservé
@@ -37,20 +35,19 @@ const WishlistItemCard = ({
   categories = [],
   qty = 1,
   description,
-  isFlipped = false,
-  onFlip,
   giftMode = false,
   isLoadingReservations = false,
   isReserved = false,
   reservation = null,
   onReserve,
+  sx = {},
 }) => {
   const [dialogOpen, setDialogOpen] = React.useState(false);
-  const handleCardClick = React.useCallback(() => {
-    if (description && onFlip) {
-      onFlip(isFlipped ? null : title);
-    }
-  }, [description, isFlipped, onFlip, title]);
+  const [activeTab, setActiveTab] = React.useState(0);
+
+  const handleTabChange = React.useCallback((event, newValue) => {
+    setActiveTab(newValue);
+  }, []);
 
   const handleLinkClick = React.useCallback(event => {
     event.stopPropagation();
@@ -75,157 +72,157 @@ const WishlistItemCard = ({
     <Box
       sx={{
         width: '100%',
-        perspective: '1000px',
-        cursor: description ? 'pointer' : 'default',
+        ...sx,
       }}
-      onClick={handleCardClick}
     >
-      <Box
+      <Card
         sx={{
-          position: 'relative',
           height: '100%',
-          transformStyle: 'preserve-3d',
-          transition: 'transform 0.6s',
-          transform: isFlipped && description ? 'rotateY(180deg)' : 'rotateY(0deg)',
+          display: 'flex',
+          flexDirection: 'column',
+          border: '1px solid',
+          borderColor: !isReserved ? 'primary.main' : 'secondary.main',
         }}
+        elevation={5}
       >
-        {/* Face avant */}
-        <Card
-          sx={{
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            backfaceVisibility: 'hidden',
-            opacity: isReserved ? 0.75 : 1,
-          }}
-        >
-          {link && (
-            <Tooltip title="Ouvrir le lien externe">
-              <IconButton
-                onClick={handleLinkClick}
-                aria-label="Ouvrir le lien du produit"
-                href={link}
-                color="secondary"
-                sx={{
-                  position: 'absolute',
-                  top: 8,
-                  right: 8,
-                  boxShadow: 2,
-                  bgcolor: 'background.paper',
-                }}
-              >
-                <LinkIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          )}
-
-          <CardMedia
-            component="img"
-            image={picture || blankImage}
-            alt={title}
-            sx={{
-              width: '100%',
-              aspectRatio: '1',
-              objectFit: 'cover',
-            }}
-          />
-
-          <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-            {brand && (
-              <Typography variant="caption" color="text.secondary" gutterBottom>
-                {brand}
-              </Typography>
-            )}
-
-            <Typography variant="h6" component="h2" gutterBottom sx={{ flexGrow: 1, lineHeight: 1.2 }}>
-              {qty > 1 && <Chip size="small" color="secondary" label={`${qty}×`} sx={{ mr: 0.5, mb: 0.5 }} />}
-              {title}{' '}
-              <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
-                {categories.map(category => (
-                  <CategoryChip
-                    variant="dot"
-                    label={category}
-                    key={category}
-                    sx={{ mr: 0.25 }}
-                  />
-                ))}
-              </Box>
-            </Typography>
-
-            {giftMode && (
-              <Box sx={{ mt: 2 }}>
-                {isLoadingReservations && (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
-                    <CircularProgress size={24} />
-                  </Box>
-                )}
-
-                {!isLoadingReservations && isReserved && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    🎁
-                    <Typography variant="caption" color="primary">
-                      Déjà réservé
-                      {reservation?.comment && ` - ${reservation.comment}`}
-                    </Typography>
-                  </Box>
-                )}
-
-                {!isLoadingReservations && !isReserved && (
-                  <Button
-                    size="small"
-                    fullWidth
-                    startIcon="🎁"
-                    onClick={handleReserveClick}
-                  >
-                    Réserver
-                  </Button>
-                )}
-              </Box>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Face arrière */}
         {description && (
-          <Card
+          <Tabs
+            value={activeTab}
+            onChange={handleTabChange}
+            // variant="fullWidth"
+            indicatorColor={!isReserved ? 'primary' : 'secondary'}
+            textColor={!isReserved ? 'primary' : 'secondary'}
             sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              backfaceVisibility: 'hidden',
-              transform: 'rotateY(180deg)',
-              overflow: 'auto',
+              minHeight: 36,
+              '& .MuiTab-root': {
+                minHeight: 36,
+                py: 0.5,
+                fontSize: '0.75rem',
+              },
             }}
           >
-            <CardContent sx={{ p: 2 }}>
+            <Tab label="Aperçu" />
+            <Tab label="Description" />
+          </Tabs>
+        )}
+
+        {activeTab === 0 && (
+          <>
+            {link && (
+              <Tooltip title="Ouvrir le lien externe">
+                <IconButton
+                  onClick={handleLinkClick}
+                  aria-label="Ouvrir le lien du produit"
+                  href={link}
+                  color="secondary"
+                  sx={{
+                    position: 'absolute',
+                    top: description ? 56 : 8,
+                    right: 8,
+                    boxShadow: 2,
+                    bgcolor: 'background.paper',
+                    zIndex: 1,
+                  }}
+                >
+                  <LinkIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+
+            <CardMedia
+              component="img"
+              image={picture || blankImage}
+              alt={title}
+              sx={{
+                width: '100%',
+                aspectRatio: '1',
+                objectFit: 'cover',
+              }}
+            />
+
+            <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+              {brand && (
+                <Typography variant="caption" color="text.secondary" gutterBottom>
+                  {brand}
+                </Typography>
+              )}
+
+              <Typography variant="h6" component="h2" gutterBottom sx={{ flexGrow: 1, lineHeight: 1.2 }}>
+                {qty > 1 && <Chip size="small" color="secondary" label={`${qty}×`} sx={{ mr: 0.5, mb: 0.5 }} />}
+                {title}{' '}
+                <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
+                  {categories.map(category => (
+                    <CategoryChip
+                      variant="dot"
+                      label={category}
+                      key={category}
+                      sx={{ mr: 0.25 }}
+                    />
+                  ))}
+                </Box>
+              </Typography>
+
+              {giftMode && (
+                <Box sx={{ mt: 2 }}>
+                  {isLoadingReservations && (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
+                      <CircularProgress size={24} />
+                    </Box>
+                  )}
+
+                  {!isLoadingReservations && isReserved && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      🎁
+                      <Typography variant="caption" color="primary">
+                        Déjà réservé
+                        {reservation?.comment && ` - ${reservation.comment}`}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {!isLoadingReservations && !isReserved && (
+                    <Button
+                      size="small"
+                      fullWidth
+                      startIcon="🎁"
+                      onClick={handleReserveClick}
+                    >
+                      Réserver
+                    </Button>
+                  )}
+                </Box>
+              )}
+            </CardContent>
+          </>
+        )}
+
+        {activeTab === 1 && description && (
+          <CardContent sx={{ flexGrow: 1, overflow: 'auto' }}>
+            {brand && (
               <Typography variant="caption" color="text.secondary" gutterBottom display="block">
                 {brand}
               </Typography>
-              <Typography variant="h6" component="h2" sx={{ lineHeight: 1.2 }} gutterBottom>
-                {title}
-              </Typography>
-              <Box
-                sx={{
-                  '& p': {
-                    mt: 0,
-                    mb: 1,
-                    fontSize: '0.875rem',
-                  },
-                  '& p:last-child': {
-                    mb: 0,
-                  },
-                }}
-              >
-                <ReactMarkdown>{description}</ReactMarkdown>
-              </Box>
-            </CardContent>
-          </Card>
+            )}
+            <Typography variant="h6" component="h2" sx={{ lineHeight: 1.2 }} gutterBottom>
+              {title}
+            </Typography>
+            <Box
+              sx={{
+                '& p': {
+                  mt: 0,
+                  mb: 1,
+                  fontSize: '0.875rem',
+                },
+                '& p:last-child': {
+                  mb: 0,
+                },
+              }}
+            >
+              <ReactMarkdown>{description}</ReactMarkdown>
+            </Box>
+          </CardContent>
         )}
-      </Box>
+      </Card>
 
       <ReservationDialog
         open={dialogOpen}
