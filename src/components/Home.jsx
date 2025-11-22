@@ -27,7 +27,11 @@ const Home = () => {
   const [flippedCard, setFlippedCard] = React.useState(null);
   const { data, isLoading, error } = useWishlist();
   const { data: listInfo, isLoading: isLoadingList } = useListInfo();
-  const { reservations, isLoading: isLoadingReservations, addReservation } = useReservations(giftMode);
+  const {
+    reservations,
+    isLoading: isLoadingReservations,
+    addReservation,
+  } = useReservations(giftMode);
 
   const items = React.useMemo(() => data?.items || [], [data?.items]);
   const allCategories = React.useMemo(() => data?.categories || [], [data?.categories]);
@@ -53,6 +57,39 @@ const Home = () => {
   const toggleGiftMode = React.useCallback(() => {
     setGiftMode(prev => !prev);
   }, []);
+
+  // Désactiver automatiquement le mode offrir après 5 minutes d'inactivité
+  React.useEffect(() => {
+    if (!giftMode) return;
+
+    const INACTIVITY_TIMEOUT = 2 * 60 * 1000; // 2 minutes
+    let timeoutId;
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setGiftMode(false);
+      }, INACTIVITY_TIMEOUT);
+    };
+
+    // Événements d'activité à surveiller
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+
+    events.forEach(event => {
+      document.addEventListener(event, resetTimer, true);
+    });
+
+    // Démarrer le timer initial
+    resetTimer();
+
+    // Nettoyage
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach(event => {
+        document.removeEventListener(event, resetTimer, true);
+      });
+    };
+  }, [giftMode]);
 
   const sortedItems = React.useMemo(
     () => items.toSorted(({ weight: a = 999 }, { weight: b = 999 }) => a - b),
