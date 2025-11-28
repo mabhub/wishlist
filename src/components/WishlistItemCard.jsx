@@ -1,9 +1,20 @@
 import React from 'react';
-import { Box, Button, Card, CardContent, CardMedia, Chip, CircularProgress, IconButton, Tab, Tabs, Tooltip, Typography } from '@mui/material';
-import { Link as LinkIcon } from '@mui/icons-material';
+import {
+  Box,
+  Button,
+  Card,
+  CardActionArea,
+  CardContent,
+  CardMedia,
+  Chip,
+  CircularProgress,
+  Tab,
+  Tabs,
+  TextField,
+  Typography,
+} from '@mui/material';
 import ReactMarkdown from 'react-markdown';
 import CategoryChip from './CategoryChip';
-import ReservationDialog from './ReservationDialog';
 
 const blankImage = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect x="0" y="0" width="200" height="200" fill="white" /></svg>';
 
@@ -42,31 +53,20 @@ const WishlistItemCard = ({
   onReserve,
   sx = {},
 }) => {
-  const [dialogOpen, setDialogOpen] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState(0);
+  const [reservationComment, setReservationComment] = React.useState('');
 
   const handleTabChange = React.useCallback((event, newValue) => {
     setActiveTab(newValue);
   }, []);
 
-  const handleLinkClick = React.useCallback(event => {
-    event.stopPropagation();
-  }, []);
-
-  const handleReserveClick = React.useCallback(event => {
-    event.stopPropagation();
-    setDialogOpen(true);
-  }, []);
-
-  const handleDialogClose = React.useCallback(() => {
-    setDialogOpen(false);
-  }, []);
-
-  const handleReserveConfirm = React.useCallback(comment => {
+  const handleReservationConfirm = React.useCallback(() => {
     if (onReserve) {
-      onReserve({ wishId: uuid, comment });
+      onReserve({ wishId: uuid, comment: reservationComment });
+      setReservationComment('');
+      setActiveTab(0); // Retour à l'onglet Aperçu
     }
-  }, [onReserve, uuid]);
+  }, [onReserve, uuid, reservationComment]);
 
   return (
     <Box
@@ -82,53 +82,41 @@ const WishlistItemCard = ({
           flexDirection: 'column',
           border: '1px solid',
           borderColor: !isReserved ? 'primary.main' : 'secondary.main',
+          transition: 'border-color 0.3s',
         }}
         elevation={5}
       >
-        {description && (
+        {(description || giftMode) && (
           <Tabs
             value={activeTab}
             onChange={handleTabChange}
-            // variant="fullWidth"
+            variant="fullWidth"
             indicatorColor={!isReserved ? 'primary' : 'secondary'}
             textColor={!isReserved ? 'primary' : 'secondary'}
             sx={{
               minHeight: 36,
               '& .MuiTab-root': {
                 minHeight: 36,
+                minWidth: 6,
                 py: 0.5,
+                px: 0.2,
                 fontSize: '0.75rem',
               },
             }}
           >
             <Tab label="Aperçu" />
-            <Tab label="Description" />
+            {description && <Tab label="Description" />}
+            {isLoadingReservations && <Tab label={<CircularProgress size="small" />} />}
+            {giftMode && !isLoadingReservations && (<Tab label={isReserved ? 'Réservé' : 'Offrir'} />)}
           </Tabs>
         )}
 
         {activeTab === 0 && (
-          <>
-            {link && (
-              <Tooltip title="Ouvrir le lien externe">
-                <IconButton
-                  onClick={handleLinkClick}
-                  aria-label="Ouvrir le lien du produit"
-                  href={link}
-                  color="secondary"
-                  sx={{
-                    position: 'absolute',
-                    top: description ? 56 : 8,
-                    right: 8,
-                    boxShadow: 2,
-                    bgcolor: 'background.paper',
-                    zIndex: 1,
-                  }}
-                >
-                  <LinkIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            )}
-
+          <CardActionArea
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <CardMedia
               component="img"
               image={picture || blankImage}
@@ -139,6 +127,27 @@ const WishlistItemCard = ({
                 objectFit: 'cover',
               }}
             />
+
+            {giftMode && isReserved && (
+              <Box
+                sx={{
+                  width: '100%',
+                  aspectRatio: '1',
+                  objectFit: 'cover',
+                  position: 'absolute',
+                  bgcolor: 'rgba(255, 255, 255, 0.75)',
+                  opacity: 0.85,
+                  left: 0,
+                  top: 0,
+                  display: 'flex',
+                  fontSize: '1rem',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Chip label="Déjà offert" color="secondary" />
+              </Box>
+            )}
 
             <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
               {brand && (
@@ -161,39 +170,8 @@ const WishlistItemCard = ({
                   ))}
                 </Box>
               </Typography>
-
-              {giftMode && (
-                <Box sx={{ mt: 2 }}>
-                  {isLoadingReservations && (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
-                      <CircularProgress size={24} />
-                    </Box>
-                  )}
-
-                  {!isLoadingReservations && isReserved && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      🎁
-                      <Typography variant="caption" color="primary">
-                        Déjà réservé
-                        {reservation?.comment && ` - ${reservation.comment}`}
-                      </Typography>
-                    </Box>
-                  )}
-
-                  {!isLoadingReservations && !isReserved && (
-                    <Button
-                      size="small"
-                      fullWidth
-                      startIcon="🎁"
-                      onClick={handleReserveClick}
-                    >
-                      Réserver
-                    </Button>
-                  )}
-                </Box>
-              )}
             </CardContent>
-          </>
+          </CardActionArea>
         )}
 
         {activeTab === 1 && description && (
@@ -222,14 +200,77 @@ const WishlistItemCard = ({
             </Box>
           </CardContent>
         )}
-      </Card>
 
-      <ReservationDialog
-        open={dialogOpen}
-        onClose={handleDialogClose}
-        onConfirm={handleReserveConfirm}
-        itemTitle={title}
-      />
+        {activeTab === (description ? 2 : 1) && giftMode && (
+          <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+            {isReserved ? (
+              <>
+                {brand && (
+                  <Typography variant="caption" color="text.secondary" gutterBottom display="block">
+                    {brand}
+                  </Typography>
+                )}
+                <Typography variant="h6" component="h2" sx={{ lineHeight: 1.2 }} gutterBottom>
+                  {title}
+                </Typography>
+                <Typography variant="h6" color="secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  🎁 Déjà réservé
+                </Typography>
+                {reservation?.comment && (
+                  <Box
+                    sx={{
+                      p: 2,
+                      bgcolor: 'grey.100',
+                      borderRadius: 1,
+                      borderLeft: 3,
+                      borderColor: 'primary.main',
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      Message de réservation :
+                    </Typography>
+                    <Typography variant="body1">{reservation.comment}</Typography>
+                  </Box>
+                )}
+              </>
+            ) : (
+              <>
+                <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  🎁 Réserver ce cadeau
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Vous êtes sur le point de réserver <strong>{title}</strong>.
+                  Vous pouvez ajouter un commentaire ou indiquer de la part de qui c'est.
+                </Typography>
+                <TextField
+                  fullWidth
+                  label="Commentaire ou 'de la part de...'"
+                  placeholder="Ex: De la part de Jean et Marie"
+                  value={reservationComment}
+                  onChange={e => setReservationComment(e.target.value)}
+                  multiline
+                  rows={3}
+                  sx={{ mt: 1 }}
+                />
+                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                  <Button
+                    onClick={() => setActiveTab(0)}
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    onClick={handleReservationConfirm}
+                    variant="contained"
+                    color="primary"
+                  >
+                    Confirmer la réservation
+                  </Button>
+                </Box>
+              </>
+            )}
+          </CardContent>
+        )}
+      </Card>
     </Box>
   );
 };
