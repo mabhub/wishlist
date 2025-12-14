@@ -1,10 +1,8 @@
 import React from 'react';
 import { Alert, Box, CircularProgress, Container, Divider, IconButton, Tooltip, Typography } from '@mui/material';
-import { ViewList as ViewListIcon, ViewModule as ViewModuleIcon } from '@mui/icons-material';
 import { Link, useParams } from 'react-router-dom';
 import Grid from '@mui/material/Unstable_Grid2';
 
-import WishlistItem from './WishlistItem';
 import WishlistItemCard from './WishlistItemCard';
 import CategoryChip from './CategoryChip';
 import useWishlist from '../hooks/useWishlist';
@@ -24,7 +22,8 @@ const Home = () => {
   const { listId } = useParams();
   const activeListId = listId || BASEROW_CONFIG.defaultListId;
   const [disabledCategories, setDisabledCategories] = React.useState([]);
-  const [viewMode, setViewMode] = React.useState('grid'); // 'list' ou 'grid'
+  // const [viewMode, setViewMode] = React.useState('grid');
+  // Mode liste temporairement désactivé - à moderniser
   const [giftMode, setGiftMode] = React.useState(false); // Mode offrir
   const { data, isLoading, error } = useWishlist();
   const { data: listInfo, isLoading: isLoadingList } = useListInfo();
@@ -51,13 +50,16 @@ const Home = () => {
     [allCategories],
   );
 
-  const toggleViewMode = React.useCallback(() => {
-    setViewMode(prevMode => (prevMode === 'list' ? 'grid' : 'list'));
-  }, []);
-
   const toggleGiftMode = React.useCallback(() => {
     setGiftMode(prev => !prev);
   }, []);
+
+  /*
+  // Temporairement désactivé - mode liste à moderniser
+  const toggleViewMode = React.useCallback(() => {
+    setViewMode(prevMode => (prevMode === 'list' ? 'grid' : 'list'));
+  }, []);
+  */
 
   // Désactiver automatiquement le mode offrir après 5 minutes d'inactivité
   React.useEffect(() => {
@@ -175,11 +177,13 @@ const Home = () => {
           ))}
         </Box>
 
+        {/* Temporairement désactivé - mode liste à moderniser
         <Tooltip title={viewMode === 'list' ? 'Affichage en grille' : 'Affichage en liste'}>
           <IconButton onClick={toggleViewMode} aria-label="Changer le mode d'affichage">
             {viewMode === 'list' ? <ViewModuleIcon /> : <ViewListIcon />}
           </IconButton>
         </Tooltip>
+        */}
 
         <Tooltip title={giftMode ? 'Masquer les réservations' : 'Mode offrir'}>
           <IconButton
@@ -195,26 +199,20 @@ const Home = () => {
 
       <Divider sx={{ my: 2 }} />
 
-      {viewMode === 'list' ? (
-        filteredItem.map(item => (
-          <WishlistItem key={item.title} {...item} />
-        ))
-      ) : (
-        <Grid container spacing={2}>
-          {filteredItem.map(item => (
-            <Grid key={item.title} xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
-              <WishlistItemCard
-                {...item}
-                giftMode={giftMode}
-                isLoadingReservations={isLoadingReservations}
-                isReserved={giftMode && reservations[item.uuid]}
-                reservation={giftMode ? reservations[item.uuid] : null}
-                onReserve={addReservation}
-              />
-            </Grid>
-          ))}
-        </Grid>
-      )}
+      <Grid container spacing={2}>
+        {filteredItem.map(item => (
+          <Grid key={item.title} xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
+            <WishlistItemCard
+              {...item}
+              giftMode={giftMode}
+              isLoadingReservations={isLoadingReservations}
+              isReserved={giftMode && reservations[item.uuid]}
+              reservation={giftMode ? reservations[item.uuid] : null}
+              onReserve={addReservation}
+            />
+          </Grid>
+        ))}
+      </Grid>
     </Container>
   );
 };

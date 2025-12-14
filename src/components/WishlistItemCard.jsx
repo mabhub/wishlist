@@ -56,6 +56,13 @@ const WishlistItemCard = ({
   const [activeTab, setActiveTab] = React.useState(0);
   const [reservationComment, setReservationComment] = React.useState('');
 
+  // Réinitialiser l'onglet actif quand le mode offrir est désactivé
+  React.useEffect(() => {
+    if (!giftMode && activeTab > (description ? 1 : 0)) {
+      setActiveTab(0);
+    }
+  }, [giftMode, activeTab, description]);
+
   const handleTabChange = React.useCallback((event, newValue) => {
     setActiveTab(newValue);
   }, []);
