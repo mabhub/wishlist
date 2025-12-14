@@ -8,6 +8,7 @@ import {
   CardMedia,
   Chip,
   CircularProgress,
+  Stack,
   Tab,
   Tabs,
   TextField,
@@ -30,6 +31,8 @@ const blankImage = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" w
  * @param {string[]} [props.categories=[]] - Catégories associées
  * @param {number} [props.qty=1] - Quantité souhaitée
  * @param {string} [props.description] - Description complète du produit
+ * @param {string} [props.createdOn] - Date de création ISO 8601
+ * @param {string} [props.lastModifiedOn] - Date de dernière modification ISO 8601
  * @param {boolean} [props.giftMode=false] - Mode offrir activé
  * @param {boolean} [props.isLoadingReservations=false] - Chargement des réservations en cours
  * @param {boolean} [props.isReserved=false] - Si true, l'élément est réservé
@@ -46,6 +49,8 @@ const WishlistItemCard = ({
   categories = [],
   qty = 1,
   description,
+  createdOn,
+  lastModifiedOn,
   giftMode = false,
   isLoadingReservations = false,
   isReserved = false,
@@ -123,6 +128,7 @@ const WishlistItemCard = ({
             href={link}
             target="_blank"
             rel="noopener noreferrer"
+            sx={{ flex: 1 }}
           >
             <CardMedia
               component="img"
@@ -182,7 +188,7 @@ const WishlistItemCard = ({
         )}
 
         {activeTab === 1 && description && (
-          <CardContent sx={{ flexGrow: 1, overflow: 'auto' }}>
+          <CardContent sx={{ flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
             {brand && (
               <Typography variant="caption" color="text.secondary" gutterBottom display="block">
                 {brand}
@@ -205,42 +211,64 @@ const WishlistItemCard = ({
             >
               <ReactMarkdown>{description}</ReactMarkdown>
             </Box>
+
+            {(createdOn || lastModifiedOn) && (
+              <Stack sx={{ mt: 'auto', pt: 2, opacity: 0.4 }} direction="row">
+                {createdOn && (
+                  <Typography variant="caption" color="text.secondary" display="block" sx={{ lineHeight: 1, letterSpacing: -0.05 }}>
+                    Créé le<br />
+                    {new Date(createdOn).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </Typography>
+                )}
+                {lastModifiedOn && (
+                  <Typography variant="caption" color="text.secondary" display="block" sx={{ textAlign: 'right', ml: 'auto', lineHeight: 1, letterSpacing: -0.05 }}>
+                    Modifié le<br />
+                    {new Date(lastModifiedOn).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </Typography>
+                )}
+              </Stack>
+            )}
           </CardContent>
         )}
 
         {activeTab === (description ? 2 : 1) && giftMode && (
           <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-            {isReserved ? (
+            {isReserved && (
               <>
                 {brand && (
                   <Typography variant="caption" color="text.secondary" gutterBottom display="block">
                     {brand}
                   </Typography>
                 )}
-                <Typography variant="h6" component="h2" sx={{ lineHeight: 1.2 }} gutterBottom>
+                <Typography variant="h6" component="h2" sx={{ lineHeight: 1.2 }}>
                   {title}
                 </Typography>
-                <Typography variant="h6" color="secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="h6" color="secondary" sx={{ textAlign: 'center', mt: 2 }}>
                   🎁 Déjà réservé
                 </Typography>
+
                 {reservation?.comment && (
-                  <Box
-                    sx={{
-                      p: 2,
-                      bgcolor: 'grey.100',
-                      borderRadius: 1,
-                      borderLeft: 3,
-                      borderColor: 'primary.main',
-                    }}
-                  >
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                  <>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
                       Message de réservation :
                     </Typography>
-                    <Typography variant="body1">{reservation.comment}</Typography>
-                  </Box>
+                    <Box
+                      sx={{
+                        p: 1,
+                        bgcolor: 'grey.100',
+                        borderRadius: 1,
+                        borderLeft: 3,
+                        borderColor: 'primary.main',
+                      }}
+                    >
+                      <Typography variant="body1">{reservation.comment}</Typography>
+                    </Box>
+                  </>
                 )}
               </>
-            ) : (
+            )}
+
+            {!isReserved && (
               <>
                 <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   🎁 Réserver ce cadeau
@@ -259,7 +287,7 @@ const WishlistItemCard = ({
                   rows={3}
                   sx={{ mt: 1 }}
                 />
-                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                <Box sx={{ mt: 1, display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                   <Button
                     onClick={() => setActiveTab(0)}
                   >
@@ -270,7 +298,7 @@ const WishlistItemCard = ({
                     variant="contained"
                     color="primary"
                   >
-                    Confirmer la réservation
+                    Confirmer
                   </Button>
                 </Box>
               </>

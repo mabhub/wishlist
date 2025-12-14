@@ -1,5 +1,17 @@
 import React from 'react';
-import { Alert, Box, CircularProgress, Container, Divider, IconButton, Tooltip, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Chip,
+  CircularProgress,
+  Container,
+  Divider,
+  FormControlLabel,
+  IconButton,
+  Switch,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import { Link, useParams } from 'react-router-dom';
 import Grid from '@mui/material/Unstable_Grid2';
 
@@ -25,6 +37,7 @@ const Home = () => {
   // const [viewMode, setViewMode] = React.useState('grid');
   // Mode liste temporairement désactivé - à moderniser
   const [giftMode, setGiftMode] = React.useState(false); // Mode offrir
+  const [hideReserved, setHideReserved] = React.useState(false); // Masquer les produits réservés
   const { data, isLoading, error } = useWishlist();
   const { data: listInfo, isLoading: isLoadingList } = useListInfo();
   const {
@@ -52,6 +65,10 @@ const Home = () => {
 
   const toggleGiftMode = React.useCallback(() => {
     setGiftMode(prev => !prev);
+  }, []);
+
+  const toggleHideReserved = React.useCallback(() => {
+    setHideReserved(prev => !prev);
   }, []);
 
   /*
@@ -101,15 +118,23 @@ const Home = () => {
 
   const filteredItem = React.useMemo(
     () => sortedItems.filter(
-      ({ categories = [] }) => {
-        if (!categories.length) {
-          return true;
+      ({ categories = [], uuid }) => {
+        // Filtrer par catégorie
+        const allCategoriesDisabled = categories.length
+          && categories.every(category => disabledCategories.includes(category));
+        if (allCategoriesDisabled) {
+          return false;
         }
 
-        return !categories.every(category => disabledCategories.includes(category));
+        // Filtrer les produits réservés si le mode est actif
+        if (giftMode && hideReserved && reservations[uuid]) {
+          return false;
+        }
+
+        return true;
       },
     ),
-    [disabledCategories, sortedItems],
+    [disabledCategories, sortedItems, giftMode, hideReserved, reservations],
   );
 
   if (isLoading || isLoadingList) {
@@ -185,19 +210,49 @@ const Home = () => {
         </Tooltip>
         */}
 
-        <Tooltip title={giftMode ? 'Masquer les réservations' : 'Mode offrir'}>
-          <IconButton
-            onClick={toggleGiftMode}
-            aria-label="Activer le mode offrir"
-            color={giftMode ? 'primary' : 'default'}
-            sx={{ fontSize: '5rem' }}
-          >
-            🎁
-          </IconButton>
-        </Tooltip>
+        <Box sx={{ position: 'relative' }}>
+          <Tooltip title={giftMode ? 'Masquer les réservations' : 'Mode offrir'}>
+            <IconButton
+              onClick={toggleGiftMode}
+              aria-label="Activer le mode offrir"
+              color={giftMode ? 'primary' : 'default'}
+              sx={{ fontSize: '5rem' }}
+            >
+              🎁
+              <Chip
+                label="Offrir"
+                size="small"
+                color={giftMode ? 'primary' : 'default'}
+                sx={{
+                  left: '50%',
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  bgcolor: giftMode ? 'primary.main' : 'rgba(0, 0, 0, 0.5)',
+                  color: giftMode ? 'primary.contrastText' : '#fff',
+                  position: 'absolute',
+                }}
+              />
+            </IconButton>
+          </Tooltip>
+        </Box>
       </Box>
 
       <Divider sx={{ my: 2 }} />
+
+      {giftMode && (
+        <Box sx={{ mb: 2 }}>
+          <FormControlLabel
+            control={(
+              <Switch
+                checked={hideReserved}
+                onChange={toggleHideReserved}
+                color="primary"
+              />
+            )}
+            label="Masquer les produits déjà réservés"
+          />
+        </Box>
+      )}
 
       <Grid container spacing={2}>
         {filteredItem.map(item => (

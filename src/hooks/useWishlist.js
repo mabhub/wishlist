@@ -23,6 +23,8 @@ const transformBaserowData = baserowItems => {
     weight: item.weight ? parseFloat(item.weight) : 999,
     categories: item.categories ? item.categories.split(',').map(c => c.trim()) : [],
     qty: 1,
+    createdOn: item.created || '',
+    lastModifiedOn: item.modified || '',
   }));
 
   // Extraire les catégories uniques
