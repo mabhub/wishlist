@@ -8,6 +8,7 @@ import {
   CardMedia,
   Chip,
   CircularProgress,
+  Collapse,
   Stack,
   Tab,
   Tabs,
@@ -117,19 +118,15 @@ const WishlistItemCard = ({
             }}
           >
             <Tab label="Aperçu" />
-            {description && <Tab label="Description" />}
+            {description && <Tab label="Détails" />}
             {isLoadingReservations && <Tab label={<CircularProgress size="small" />} />}
             {giftMode && !isLoadingReservations && (<Tab label={isReserved ? 'Réservé' : 'Offrir'} />)}
           </Tabs>
         )}
 
-        {activeTab === 0 && (
-          <CardActionArea
-            href={link}
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={{ flex: 1 }}
-          >
+        {/* Zone 1: Image (visible sur onglets 0 et 1) */}
+        <Collapse in={activeTab === 0}>
+          <Box sx={{ position: 'relative' }}>
             <CardMedia
               component="img"
               image={picture || blankImage}
@@ -158,45 +155,50 @@ const WishlistItemCard = ({
                   justifyContent: 'center',
                 }}
               >
-                <Chip label="Déjà offert" color="secondary" />
+                <Chip label="Déjà réservé" color="secondary" />
               </Box>
             )}
+          </Box>
+        </Collapse>
 
-            <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-              {brand && (
-                <Typography variant="caption" color="text.secondary" gutterBottom>
-                  {brand}
-                </Typography>
-              )}
-
-              <Typography variant="h6" component="h2" gutterBottom sx={{ flexGrow: 1, lineHeight: 1.2 }}>
-                {qty > 1 && <Chip size="small" color="secondary" label={`${qty}×`} sx={{ mr: 0.5, mb: 0.5 }} />}
-                {title}{' '}
-                <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
-                  {categories.map(category => (
-                    <CategoryChip
-                      variant="dot"
-                      label={category}
-                      key={category}
-                      sx={{ mr: 0.25 }}
-                    />
-                  ))}
-                </Box>
-              </Typography>
-            </CardContent>
-          </CardActionArea>
-        )}
-
-        {activeTab === 1 && description && (
-          <CardContent sx={{ flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+        <CardContent sx={{ flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+          {/* Zone 2: Titre (toujours visible) */}
+          <CardActionArea
+            component="a"
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{
+              p: 0,
+              borderRadius: 0,
+              textAlign: 'left',
+              display: 'block',
+            }}
+          >
             {brand && (
-              <Typography variant="caption" color="text.secondary" gutterBottom display="block">
+              <Typography variant="caption" color="text.secondary" gutterBottom>
                 {brand}
               </Typography>
             )}
+
             <Typography variant="h6" component="h2" sx={{ lineHeight: 1.2 }} gutterBottom>
-              {title}
+              {qty > 1 && <Chip size="small" color="secondary" label={`${qty}×`} sx={{ mr: 0.5, mb: 0.5 }} />}
+              {title}{' '}
+              <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
+                {categories.map(category => (
+                  <CategoryChip
+                    variant="dot"
+                    label={category}
+                    key={category}
+                    sx={{ mr: 0.25 }}
+                  />
+                ))}
+              </Box>
             </Typography>
+          </CardActionArea>
+
+          {/* Zone 3: Description + Dates (visible sur onglet 1) */}
+          <Collapse in={activeTab === 1 && !!description}>
             <Box
               sx={{
                 '& p': {
@@ -213,7 +215,7 @@ const WishlistItemCard = ({
             </Box>
 
             {(createdOn || lastModifiedOn) && (
-              <Stack sx={{ mt: 'auto', pt: 2, opacity: 0.4 }} direction="row">
+              <Stack sx={{ mt: 2, pt: 2, opacity: 0.4 }} direction="row">
                 {createdOn && (
                   <Typography variant="caption" color="text.secondary" display="block" sx={{ lineHeight: 1, letterSpacing: -0.05 }}>
                     Créé le<br />
@@ -228,21 +230,12 @@ const WishlistItemCard = ({
                 )}
               </Stack>
             )}
-          </CardContent>
-        )}
+          </Collapse>
 
-        {activeTab === (description ? 2 : 1) && giftMode && (
-          <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+          {/* Zone 4: Informations de réservation (visible sur onglet 2/1 en mode offrir) */}
+          <Collapse in={activeTab === (description ? 2 : 1) && giftMode}>
             {isReserved && (
               <>
-                {brand && (
-                  <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-                    {brand}
-                  </Typography>
-                )}
-                <Typography variant="h6" component="h2" sx={{ lineHeight: 1.2 }}>
-                  {title}
-                </Typography>
                 <Typography variant="h6" color="secondary" sx={{ textAlign: 'center', mt: 2 }}>
                   🎁 Déjà réservé
                 </Typography>
@@ -250,7 +243,7 @@ const WishlistItemCard = ({
                 {reservation?.comment && (
                   <>
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                      Message de réservation :
+                      De la part de :
                     </Typography>
                     <Box
                       sx={{
@@ -270,26 +263,32 @@ const WishlistItemCard = ({
 
             {!isReserved && (
               <>
-                <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  🎁 Réserver ce cadeau
+                <Typography variant="h7" sx={{ mt: 2, textAlign: 'center', display: 'block', lineHeight: 1 }}>
+                  🎁<br />
+                  Vous êtes sur le point de réserver ce cadeau
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Vous êtes sur le point de réserver <strong>{title}</strong>.
-                  Vous pouvez ajouter un commentaire ou indiquer de la part de qui c'est.
-                </Typography>
+
                 <TextField
                   fullWidth
-                  label="Commentaire ou 'de la part de...'"
-                  placeholder="Ex: De la part de Jean et Marie"
+                  placeholder="De la part de ?"
+                  helperText={(
+                    <Box sx={{ lineHeight: 1.2 }}>
+                      Facultatif mais utile en cas de doublon, d'erreur, d'oubli, etc.
+                    </Box>
+                  )}
                   value={reservationComment}
                   onChange={e => setReservationComment(e.target.value)}
                   multiline
-                  rows={3}
-                  sx={{ mt: 1 }}
+                  rows={1}
+                  size="small"
+                  sx={{ mt: 1.5, fontSize: '0.5rem' }}
+
                 />
-                <Box sx={{ mt: 1, display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                <Box sx={{ mt: 2, display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                   <Button
                     onClick={() => setActiveTab(0)}
+                    variant="outlined"
+                    color="warning"
                   >
                     Annuler
                   </Button>
@@ -303,8 +302,8 @@ const WishlistItemCard = ({
                 </Box>
               </>
             )}
-          </CardContent>
-        )}
+          </Collapse>
+        </CardContent>
       </Card>
     </Box>
   );
