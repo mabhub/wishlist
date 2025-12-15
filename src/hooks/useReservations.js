@@ -73,8 +73,101 @@ const useReservations = (enabled = false) => {
 
       return response.json();
     },
-    onSuccess: () => {
-      // Invalider le cache pour recharger les réservations
+    onMutate: async ({ wishId, comment }) => {
+      // Annuler les requêtes en cours pour éviter les conflits
+      await queryClient.cancelQueries({ queryKey: ['reservations', activeListId] });
+
+      // Sauvegarder l'état précédent pour rollback en cas d'erreur
+      const previousReservations = queryClient.getQueryData(['reservations', activeListId]);
+
+      // Optimistic update : ajouter immédiatement la réservation au cache
+      queryClient.setQueryData(['reservations', activeListId], old => {
+        return {
+          ...old,
+          [wishId]: {
+            id: 'temp-' + wishId, // ID temporaire jusqu'à la réponse du serveur
+            comment: comment || '',
+          },
+        };
+      });
+
+      return { previousReservations };
+    },
+    onError: (err, variables, context) => {
+      // Rollback en cas d'erreur
+      if (context?.previousReservations) {
+        queryClient.setQueryData(['reservations', activeListId], context.previousReservations);
+      }
+    },
+    onSuccess: (data, { wishId }) => {
+      // Mettre à jour avec l'ID réel du serveur
+      queryClient.setQueryData(['reservations', activeListId], old => {
+        if (!old || !old[wishId]) return old;
+        
+        return {
+          ...old,
+          [wishId]: {
+            ...old[wishId],
+            id: data.id, // Remplacer l'ID temporaire par l'ID réel
+          },
+        };
+      });
+    },
+    onSettled: () => {
+      // Rafraîchir les données après succès ou erreur
+      queryClient.invalidateQueries({ queryKey: ['reservations', activeListId] });
+    },
+  });
+
+  // Mutation pour supprimer une réservation
+  const deleteReservationMutation = useMutation({
+    mutationFn: async reservationId => {
+      const url = `${BASEROW_CONFIG.baseUrl}/api/database/rows/table/${BASEROW_CONFIG.reservationsTableId}/${reservationId}/`;
+
+      const response = await fetch(url, {
+        method: 'DELETE',
+        ...getBaserowFetchOptions(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete reservation: ${response.statusText}`);
+      }
+
+      return reservationId;
+    },
+    onMutate: async reservationId => {
+      // Annuler les requêtes en cours pour éviter les conflits
+      await queryClient.cancelQueries({ queryKey: ['reservations', activeListId] });
+
+      // Sauvegarder l'état précédent pour rollback en cas d'erreur
+      const previousReservations = queryClient.getQueryData(['reservations', activeListId]);
+
+      // Optimistic update : retirer la réservation du cache
+      queryClient.setQueryData(['reservations', activeListId], old => {
+        if (!old) return old;
+        
+        // Trouver la clé (wishId) correspondant à ce reservationId
+        const wishIdToRemove = Object.keys(old).find(wishId => old[wishId]?.id === reservationId);
+        
+        if (!wishIdToRemove) return old;
+        
+        // Créer une copie sans cette réservation
+        const newReservations = { ...old };
+        delete newReservations[wishIdToRemove];
+        
+        return newReservations;
+      });
+
+      return { previousReservations };
+    },
+    onError: (err, reservationId, context) => {
+      // Rollback en cas d'erreur
+      if (context?.previousReservations) {
+        queryClient.setQueryData(['reservations', activeListId], context.previousReservations);
+      }
+    },
+    onSettled: () => {
+      // Rafraîchir les données après succès ou erreur
       queryClient.invalidateQueries({ queryKey: ['reservations', activeListId] });
     },
   });
@@ -85,6 +178,8 @@ const useReservations = (enabled = false) => {
     error: query.error,
     addReservation: addReservationMutation.mutate,
     isAddingReservation: addReservationMutation.isPending,
+    cancelReservation: deleteReservationMutation.mutate,
+    isCancelingReservation: deleteReservationMutation.isPending,
   };
 };
 

@@ -9,6 +9,11 @@ import {
   Chip,
   CircularProgress,
   Collapse,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Stack,
   Tab,
   Tabs,
@@ -39,6 +44,7 @@ const blankImage = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" w
  * @param {boolean} [props.isReserved=false] - Si true, l'élément est réservé
  * @param {Object} [props.reservation] - Informations de réservation (comment)
  * @param {Function} [props.onReserve] - Callback pour réserver un élément
+ * @param {Function} [props.onCancelReservation] - Callback pour annuler une réservation
  * @returns {JSX.Element} Item de wishlist en mode card
  */
 const WishlistItemCard = ({
@@ -57,10 +63,14 @@ const WishlistItemCard = ({
   isReserved = false,
   reservation = null,
   onReserve,
+  onCancelReservation,
   sx = {},
 }) => {
   const [activeTab, setActiveTab] = React.useState(0);
   const [reservationComment, setReservationComment] = React.useState('');
+  const [isEditingReservation, setIsEditingReservation] = React.useState(false);
+  const [editedComment, setEditedComment] = React.useState('');
+  const [showCancelDialog, setShowCancelDialog] = React.useState(false);
 
   // Réinitialiser l'onglet actif quand le mode offrir est désactivé
   React.useEffect(() => {
@@ -80,6 +90,40 @@ const WishlistItemCard = ({
       setActiveTab(0); // Retour à l'onglet Aperçu
     }
   }, [onReserve, uuid, reservationComment]);
+
+  const handleCancelReservation = React.useCallback(() => {
+    setShowCancelDialog(true);
+  }, []);
+
+  const handleConfirmCancel = React.useCallback(() => {
+    if (onCancelReservation && reservation?.id) {
+      onCancelReservation(reservation.id);
+      setActiveTab(0); // Retour à l'onglet Aperçu
+    }
+    setShowCancelDialog(false);
+    setIsEditingReservation(false);
+  }, [onCancelReservation, reservation]);
+
+  const handleCloseCancelDialog = React.useCallback(() => {
+    setShowCancelDialog(false);
+  }, []);
+
+  const handleEditReservation = React.useCallback(() => {
+    setEditedComment(reservation?.comment || '');
+    setIsEditingReservation(true);
+  }, [reservation]);
+
+  const handleSaveEditedReservation = React.useCallback(() => {
+    if (onReserve) {
+      onReserve({ wishId: uuid, comment: editedComment });
+      setIsEditingReservation(false);
+    }
+  }, [onReserve, uuid, editedComment]);
+
+  const handleCancelEdit = React.useCallback(() => {
+    setIsEditingReservation(false);
+    setEditedComment('');
+  }, []);
 
   return (
     <Box
@@ -155,7 +199,48 @@ const WishlistItemCard = ({
                   justifyContent: 'center',
                 }}
               >
-                <Chip label="Déjà réservé" color="secondary" />
+                <Chip
+                  label="Déjà réservé"
+                  color="secondary"
+                  onClick={() => setActiveTab(description ? 2 : 1)}
+                  sx={{ cursor: 'pointer' }}
+                />
+              </Box>
+            )}
+
+            {giftMode && !isReserved && (
+              <Box
+                sx={{
+                  width: '100%',
+                  aspectRatio: '1',
+                  objectFit: 'cover',
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  display: 'flex',
+                  fontSize: '1rem',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'background-color 0.3s',
+                  '& *': {
+                    opacity: 0,
+                    transition: 'opacity 0.3s',
+                  },
+                  '&:hover': {
+                    bgcolor: 'rgba(255, 255, 255, 0.75)',
+                    '& *': {
+                      opacity: 1,
+                    },
+                  },
+                }}
+              >
+                <Chip
+                  label="Réserver"
+                  color="primary"
+                  onClick={() => setActiveTab(description ? 2 : 1)}
+                  sx={{ cursor: 'pointer' }}
+                  elevation={4}
+                />
               </Box>
             )}
           </Box>
@@ -240,24 +325,84 @@ const WishlistItemCard = ({
                   🎁 Déjà réservé
                 </Typography>
 
-                {reservation?.comment && (
-                  <>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                      De la part de :
-                    </Typography>
-                    <Box
-                      sx={{
-                        p: 1,
-                        bgcolor: 'grey.100',
-                        borderRadius: 1,
-                        borderLeft: 3,
-                        borderColor: 'primary.main',
-                      }}
-                    >
-                      <Typography variant="body1">{reservation.comment}</Typography>
-                    </Box>
-                  </>
+                {isEditingReservation ? (
+                  <TextField
+                    fullWidth
+                    placeholder="De la part de ?"
+                    helperText={(
+                      <Box sx={{ lineHeight: 1.2 }}>
+                        Facultatif mais utile en cas de doublon, d'erreur, d'oubli, etc.
+                      </Box>
+                    )}
+                    value={editedComment}
+                    onChange={e => setEditedComment(e.target.value)}
+                    multiline
+                    rows={1}
+                    size="small"
+                    sx={{ mt: 1.5, fontSize: '0.5rem' }}
+                  />
+                ) : (
+                  reservation?.comment && (
+                    <>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                        De la part de :
+                      </Typography>
+                      <Box
+                        sx={{
+                          p: 1,
+                          bgcolor: 'grey.100',
+                          borderRadius: 1,
+                          borderLeft: 3,
+                          borderColor: 'primary.main',
+                        }}
+                      >
+                        <Typography variant="body1">{reservation.comment}</Typography>
+                      </Box>
+                    </>
+                  )
                 )}
+
+                <Box sx={{ mt: 2, display: 'flex', gap: 1, justifyContent: 'center' }}>
+                  {isEditingReservation ? (
+                    <Stack spacing={1}>
+                      <Button
+                        onClick={handleSaveEditedReservation}
+                        variant="contained"
+                        color="secondary"
+                        size="small"
+                      >
+                        Enregistrer
+                      </Button>
+                      <Button
+                        onClick={handleCancelEdit}
+                        variant="outlined"
+                        color="secondary"
+                        size="small"
+                      >
+                        Ne rien changer
+                      </Button>
+                    </Stack>
+                  ) : (
+                    <Stack spacing={1}>
+                      <Button
+                        onClick={handleEditReservation}
+                        variant="outlined"
+                        color="secondary"
+                        size="small"
+                      >
+                        Rectifier
+                      </Button>
+                      <Button
+                        onClick={handleCancelReservation}
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                      >
+                        Annuler la réservation
+                      </Button>
+                    </Stack>
+                  )}
+                </Box>
               </>
             )}
 
@@ -288,14 +433,14 @@ const WishlistItemCard = ({
                   <Button
                     onClick={() => setActiveTab(0)}
                     variant="outlined"
-                    color="warning"
+                    color="primary"
                   >
                     Annuler
                   </Button>
                   <Button
                     onClick={handleReservationConfirm}
                     variant="contained"
-                    color="primary"
+                    color="secondary"
                   >
                     Confirmer
                   </Button>
@@ -305,6 +450,32 @@ const WishlistItemCard = ({
           </Collapse>
         </CardContent>
       </Card>
+
+      {/* Dialog de confirmation d'annulation */}
+      <Dialog
+        open={showCancelDialog}
+        onClose={handleCloseCancelDialog}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          Confirmer l'annulation
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Êtes-vous sûr de vouloir annuler la réservation de<br />
+            <strong>{title}</strong> ?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCancelDialog} color="secondary" variant="outlined">
+            Non, garder
+          </Button>
+          <Button onClick={handleConfirmCancel} color="primary" variant="contained" autoFocus>
+            Oui, annuler
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

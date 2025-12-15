@@ -44,6 +44,7 @@ const Home = () => {
     reservations,
     isLoading: isLoadingReservations,
     addReservation,
+    cancelReservation,
   } = useReservations(giftMode);
 
   const items = React.useMemo(() => data?.items || [], [data?.items]);
@@ -264,6 +265,7 @@ const Home = () => {
               isReserved={giftMode && reservations[item.uuid]}
               reservation={giftMode ? reservations[item.uuid] : null}
               onReserve={addReservation}
+              onCancelReservation={cancelReservation}
             />
           </Grid>
         ))}
