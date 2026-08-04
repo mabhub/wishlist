@@ -14,5 +14,9 @@ export default defineConfig({
       },
     },
   },
-
+  test: {
+    // btoa/atob sont fournis par les globales Node, pas besoin de jsdom
+    environment: 'node',
+    include: ['src/**/*.test.js'],
+  },
 });
