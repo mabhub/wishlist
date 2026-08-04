@@ -41,6 +41,7 @@ const Home = () => {
     reservations,
     isLoading: isLoadingReservations,
     addReservation,
+    updateReservation,
     cancelReservation,
   } = useReservations(giftMode);
 
@@ -255,6 +256,7 @@ const Home = () => {
               isReserved={giftMode && reservations[item.uuid]}
               reservation={giftMode ? reservations[item.uuid] : null}
               onReserve={addReservation}
+              onUpdateReservation={updateReservation}
               onCancelReservation={cancelReservation}
             />
           </Grid>

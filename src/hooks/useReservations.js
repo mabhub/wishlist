@@ -11,7 +11,8 @@ import useActiveListId from './useActiveListId';
  * Hook pour gérer les réservations d'une liste.
  *
  * @param {boolean} enabled - Si true, charge les réservations
- * @returns {Object} Résultat avec data, isLoading, error, et fonction addReservation
+ * @returns {Object} Réservations indexées par UUID d'item, états de chargement,
+ *   et mutations addReservation / updateReservation / cancelReservation
  */
 const useReservations = (enabled = false) => {
   const activeListId = useActiveListId();
@@ -110,6 +111,55 @@ const useReservations = (enabled = false) => {
     },
   });
 
+  // Mutation pour modifier le commentaire d'une réservation existante
+  const updateReservationMutation = useMutation({
+    mutationFn: async ({ reservationId, wishId, comment }) => {
+      const url = `${BASEROW_CONFIG.baseUrl}/api/database/rows/table/${BASEROW_CONFIG.reservationsTableId}/${reservationId}/?user_field_names=true`;
+
+      const response = await fetch(url, {
+        method: 'PATCH',
+        ...getBaserowFetchOptions(),
+        body: JSON.stringify({
+          comment: encodeComment(comment, wishId),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update reservation: ${response.statusText}`);
+      }
+
+      return response.json();
+    },
+    onMutate: async ({ wishId, comment }) => {
+      await queryClient.cancelQueries({ queryKey: ['reservations', activeListId] });
+
+      const previousReservations = queryClient.getQueryData(['reservations', activeListId]);
+
+      // Optimistic update : refléter immédiatement le nouveau commentaire
+      queryClient.setQueryData(['reservations', activeListId], old => {
+        if (!old || !old[wishId]) return old;
+
+        return {
+          ...old,
+          [wishId]: {
+            ...old[wishId],
+            comment: comment || '',
+          },
+        };
+      });
+
+      return { previousReservations };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousReservations) {
+        queryClient.setQueryData(['reservations', activeListId], context.previousReservations);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['reservations', activeListId] });
+    },
+  });
+
   // Mutation pour supprimer une réservation
   const deleteReservationMutation = useMutation({
     mutationFn: async reservationId => {
@@ -169,6 +219,8 @@ const useReservations = (enabled = false) => {
     error: query.error,
     addReservation: addReservationMutation.mutate,
     isAddingReservation: addReservationMutation.isPending,
+    updateReservation: updateReservationMutation.mutate,
+    isUpdatingReservation: updateReservationMutation.isPending,
     cancelReservation: deleteReservationMutation.mutate,
     isCancelingReservation: deleteReservationMutation.isPending,
   };

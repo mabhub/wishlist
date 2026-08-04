@@ -44,6 +44,7 @@ const blankImage = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" w
  * @param {boolean} [props.isReserved=false] - Si true, l'élément est réservé
  * @param {Object} [props.reservation] - Informations de réservation (comment)
  * @param {Function} [props.onReserve] - Callback pour réserver un élément
+ * @param {Function} [props.onUpdateReservation] - Callback pour modifier le commentaire
  * @param {Function} [props.onCancelReservation] - Callback pour annuler une réservation
  * @returns {JSX.Element} Item de wishlist en mode card
  */
@@ -63,6 +64,7 @@ const WishlistItemCard = ({
   isReserved = false,
   reservation = null,
   onReserve,
+  onUpdateReservation,
   onCancelReservation,
   sx = {},
 }) => {
@@ -128,11 +130,15 @@ const WishlistItemCard = ({
   }, [reservation]);
 
   const handleSaveEditedReservation = React.useCallback(() => {
-    if (onReserve) {
-      onReserve({ wishId: uuid, comment: editedComment });
+    if (onUpdateReservation && reservation?.id) {
+      onUpdateReservation({
+        reservationId: reservation.id,
+        wishId: uuid,
+        comment: editedComment,
+      });
       setIsEditingReservation(false);
     }
-  }, [onReserve, uuid, editedComment]);
+  }, [onUpdateReservation, reservation, uuid, editedComment]);
 
   const handleCancelEdit = React.useCallback(() => {
     setIsEditingReservation(false);
