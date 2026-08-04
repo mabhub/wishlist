@@ -1,10 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'react-router-dom';
-import {
-  BASEROW_CONFIG,
-  buildBaserowUrl,
-  getBaserowFetchOptions,
-} from '../config/baserow';
+import { BASEROW_CONFIG, fetchAllBaserowRows } from '../config/baserow';
+import useActiveListId from './useActiveListId';
 
 /**
  * Transforme les données Baserow vers le format attendu par l'application.
@@ -53,25 +49,17 @@ const transformBaserowData = baserowItems => {
  * @returns {Error|null} error - Erreur éventuelle
  */
 const useWishlist = () => {
-  const { listId } = useParams();
-  const activeListId = listId || BASEROW_CONFIG.defaultListId;
+  const activeListId = useActiveListId();
 
   return useQuery({
     queryKey: ['wishlist', activeListId],
-    queryFn: async () => {
-      const url = buildBaserowUrl(BASEROW_CONFIG.tableId, {
-        list: activeListId,
-      });
-
-      const response = await fetch(url, getBaserowFetchOptions());
-
-      if (!response.ok) {
-        throw new Error(`Failed to load wishlist data: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return transformBaserowData(data.results || []);
-    },
+    queryFn: async () => transformBaserowData(
+      await fetchAllBaserowRows(
+        BASEROW_CONFIG.tableId,
+        { list: activeListId },
+        'wishlist data',
+      ),
+    ),
     staleTime: 5 * 60 * 1000, // Cache 5 minutes
   });
 };

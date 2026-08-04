@@ -1,10 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'react-router-dom';
-import {
-  BASEROW_CONFIG,
-  buildBaserowUrl,
-  getBaserowFetchOptions,
-} from '../config/baserow';
+import { BASEROW_CONFIG, fetchAllBaserowRows } from '../config/baserow';
+import useActiveListId from './useActiveListId';
 
 /**
  * Hook pour charger les informations d'une liste depuis Baserow.
@@ -17,29 +13,23 @@ import {
  * @returns {Error|null} error - Erreur éventuelle
  */
 const useListInfo = () => {
-  const { listId } = useParams();
-  const activeListId = listId || BASEROW_CONFIG.defaultListId;
+  const activeListId = useActiveListId();
 
   return useQuery({
     queryKey: ['listInfo', activeListId],
     queryFn: async () => {
-      const url = buildBaserowUrl(BASEROW_CONFIG.listsTableId, {
-        uuid: activeListId,
-      });
+      const rows = await fetchAllBaserowRows(
+        BASEROW_CONFIG.listsTableId,
+        { uuid: activeListId },
+        'list info',
+      );
 
-      const response = await fetch(url, getBaserowFetchOptions());
+      const [listData] = rows;
 
-      if (!response.ok) {
-        throw new Error(`Failed to load list info: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-
-      if (!data.results || data.results.length === 0) {
+      if (!listData) {
         return null;
       }
 
-      const listData = data.results[0];
       return {
         title: listData.title || '',
         for: listData.for || '',

@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams } from 'react-router-dom';
 import {
   BASEROW_CONFIG,
-  buildBaserowUrl,
+  fetchAllBaserowRows,
   getBaserowFetchOptions,
 } from '../config/baserow';
 import { encodeComment, decodeComment } from '../utils/encoding';
+import useActiveListId from './useActiveListId';
 
 /**
  * Hook pour gérer les réservations d'une liste.
@@ -14,29 +14,22 @@ import { encodeComment, decodeComment } from '../utils/encoding';
  * @returns {Object} Résultat avec data, isLoading, error, et fonction addReservation
  */
 const useReservations = (enabled = false) => {
-  const { listId } = useParams();
-  const activeListId = listId || BASEROW_CONFIG.defaultListId;
+  const activeListId = useActiveListId();
   const queryClient = useQueryClient();
 
   // Query pour récupérer les réservations
   const query = useQuery({
     queryKey: ['reservations', activeListId],
     queryFn: async () => {
-      const url = buildBaserowUrl(BASEROW_CONFIG.reservationsTableId, {
-        list: activeListId,
-      });
-
-      const response = await fetch(url, getBaserowFetchOptions());
-
-      if (!response.ok) {
-        throw new Error(`Failed to load reservations: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const rows = await fetchAllBaserowRows(
+        BASEROW_CONFIG.reservationsTableId,
+        { list: activeListId },
+        'reservations',
+      );
 
       // Transformer les données : décoder les commentaires et indexer par wish UUID
       const reservationsMap = {};
-      (data.results || []).forEach(reservation => {
+      rows.forEach(reservation => {
         if (reservation.wish) {
           reservationsMap[reservation.wish] = {
             id: reservation.id,
