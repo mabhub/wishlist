@@ -10,22 +10,27 @@ import { Alert, Container, Typography } from '@mui/material';
  * @returns {JSX.Element} Children ou fallback UI en cas d'erreur
  */
 class ErrorBoundary extends React.Component {
-  constructor(props) {
+  constructor (props) {
     super(props);
     this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError (error) {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error, errorInfo) {
-    // Log l'erreur pour debugging (peut être envoyé à un service de monitoring)
+  componentDidCatch (error, errorInfo) {
+    // Log volontaire : seule trace d'une erreur React capturée, en attendant
+    // un service de monitoring. Le retirer rendrait les crashes silencieux.
+    // eslint-disable-next-line no-console
     console.error('ErrorBoundary caught an error:', error, errorInfo);
   }
 
-  render() {
-    if (this.state.hasError) {
+  render () {
+    const { hasError, error } = this.state;
+    const { children } = this.props;
+
+    if (hasError) {
       return (
         <Container sx={{ py: 4 }}>
           <Alert severity="error">
@@ -33,14 +38,14 @@ class ErrorBoundary extends React.Component {
               Une erreur est survenue
             </Typography>
             <Typography variant="body2">
-              {this.state.error?.message || 'Erreur inconnue'}
+              {error?.message || 'Erreur inconnue'}
             </Typography>
           </Alert>
         </Container>
       );
     }
 
-    return this.props.children;
+    return children;
   }
 }
 
