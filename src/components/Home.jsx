@@ -12,7 +12,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Grid from '@mui/material/Unstable_Grid2';
 
 import WishlistItemCard from './WishlistItemCard';
@@ -20,7 +20,7 @@ import CategoryChip from './CategoryChip';
 import useWishlist from '../hooks/useWishlist';
 import useListInfo from '../hooks/useListInfo';
 import useReservations from '../hooks/useReservations';
-import { BASEROW_CONFIG } from '../config/baserow';
+import useActiveListId from '../hooks/useActiveListId';
 import { toggle } from '../utils/array';
 
 const noop = () => {};
@@ -31,8 +31,7 @@ const noop = () => {};
  * @returns {JSX.Element} Page Home avec liste filtrée
  */
 const Home = () => {
-  const { listId } = useParams();
-  const activeListId = listId || BASEROW_CONFIG.defaultListId;
+  const activeListId = useActiveListId();
   const [disabledCategories, setDisabledCategories] = React.useState([]);
   const [giftMode, setGiftMode] = React.useState(false); // Mode offrir
   const [hideReserved, setHideReserved] = React.useState(false); // Masquer les produits réservés
