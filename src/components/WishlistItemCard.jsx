@@ -72,22 +72,36 @@ const WishlistItemCard = ({
   const [editedComment, setEditedComment] = React.useState('');
   const [showCancelDialog, setShowCancelDialog] = React.useState(false);
 
+  // Index des onglets : l'onglet Détails n'existe que si une description est
+  // fournie, ce qui décale l'onglet de réservation d'un cran.
+  const PREVIEW_TAB = 0;
+  const detailsTab = description ? 1 : -1;
+  const reservationTab = description ? 2 : 1;
+
   // Réinitialiser l'onglet actif quand le mode offrir est désactivé
   React.useEffect(() => {
-    if (!giftMode && activeTab > (description ? 1 : 0)) {
-      setActiveTab(0);
+    if (!giftMode && activeTab >= reservationTab) {
+      setActiveTab(PREVIEW_TAB);
     }
-  }, [giftMode, activeTab, description]);
+  }, [giftMode, activeTab, reservationTab]);
 
   const handleTabChange = React.useCallback((event, newValue) => {
     setActiveTab(newValue);
+  }, []);
+
+  const showReservationTab = React.useCallback(() => {
+    setActiveTab(reservationTab);
+  }, [reservationTab]);
+
+  const showPreviewTab = React.useCallback(() => {
+    setActiveTab(PREVIEW_TAB);
   }, []);
 
   const handleReservationConfirm = React.useCallback(() => {
     if (onReserve) {
       onReserve({ wishId: uuid, comment: reservationComment });
       setReservationComment('');
-      setActiveTab(0); // Retour à l'onglet Aperçu
+      setActiveTab(PREVIEW_TAB);
     }
   }, [onReserve, uuid, reservationComment]);
 
@@ -98,7 +112,7 @@ const WishlistItemCard = ({
   const handleConfirmCancel = React.useCallback(() => {
     if (onCancelReservation && reservation?.id) {
       onCancelReservation(reservation.id);
-      setActiveTab(0); // Retour à l'onglet Aperçu
+      setActiveTab(PREVIEW_TAB);
     }
     setShowCancelDialog(false);
     setIsEditingReservation(false);
@@ -162,14 +176,14 @@ const WishlistItemCard = ({
             }}
           >
             <Tab label="Aperçu" />
-            {description && <Tab label="Détails" />}
+            {detailsTab > 0 && <Tab label="Détails" />}
             {isLoadingReservations && <Tab label={<CircularProgress size="small" />} />}
             {giftMode && !isLoadingReservations && (<Tab label={isReserved ? 'Réservé' : 'Offrir'} />)}
           </Tabs>
         )}
 
         {/* Zone 1: Image (visible sur onglets 0 et 1) */}
-        <Collapse in={activeTab === 0}>
+        <Collapse in={activeTab === PREVIEW_TAB}>
           <Box sx={{ position: 'relative' }}>
             <CardMedia
               component="img"
@@ -202,7 +216,7 @@ const WishlistItemCard = ({
                 <Chip
                   label="Déjà réservé"
                   color="secondary"
-                  onClick={() => setActiveTab(description ? 2 : 1)}
+                  onClick={showReservationTab}
                   sx={{ cursor: 'pointer' }}
                 />
               </Box>
@@ -237,9 +251,8 @@ const WishlistItemCard = ({
                 <Chip
                   label="Réserver"
                   color="primary"
-                  onClick={() => setActiveTab(description ? 2 : 1)}
+                  onClick={showReservationTab}
                   sx={{ cursor: 'pointer' }}
-                  elevation={4}
                 />
               </Box>
             )}
@@ -283,7 +296,7 @@ const WishlistItemCard = ({
           </CardActionArea>
 
           {/* Zone 3: Description + Dates (visible sur onglet 1) */}
-          <Collapse in={activeTab === 1 && !!description}>
+          <Collapse in={activeTab === detailsTab}>
             <Box
               sx={{
                 '& p': {
@@ -318,7 +331,7 @@ const WishlistItemCard = ({
           </Collapse>
 
           {/* Zone 4: Informations de réservation (visible sur onglet 2/1 en mode offrir) */}
-          <Collapse in={activeTab === (description ? 2 : 1) && giftMode}>
+          <Collapse in={activeTab === reservationTab && giftMode}>
             {isReserved && (
               <>
                 <Typography variant="h6" color="secondary" sx={{ textAlign: 'center', mt: 2 }}>
@@ -350,7 +363,7 @@ const WishlistItemCard = ({
                       <Box
                         sx={{
                           p: 1,
-                          bgcolor: 'grey.100',
+                          bgcolor: 'action.hover',
                           borderRadius: 1,
                           borderLeft: 3,
                           borderColor: 'primary.main',
@@ -408,7 +421,7 @@ const WishlistItemCard = ({
 
             {!isReserved && (
               <>
-                <Typography variant="h7" sx={{ mt: 2, textAlign: 'center', display: 'block', lineHeight: 1 }}>
+                <Typography variant="subtitle1" sx={{ mt: 2, textAlign: 'center', display: 'block', lineHeight: 1 }}>
                   🎁<br />
                   Vous êtes sur le point de réserver ce cadeau
                 </Typography>
@@ -431,7 +444,7 @@ const WishlistItemCard = ({
                 />
                 <Box sx={{ mt: 2, display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                   <Button
-                    onClick={() => setActiveTab(0)}
+                    onClick={showPreviewTab}
                     variant="outlined"
                     color="primary"
                   >
