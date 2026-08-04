@@ -1,19 +1,6 @@
 import React from 'react';
-import { Box, Chip, Tooltip } from '@mui/material';
+import { Box, Chip, Tooltip, useTheme } from '@mui/material';
 import { categoryProps } from '../constants/categories';
-
-/**
- * Map des couleurs MUI vers leurs valeurs hexadécimales.
- * Utilisé pour générer les disques colorés des catégories.
- */
-const colorMap = {
-  primary: '#1976d2',
-  secondary: '#9c27b0',
-  error: '#d32f2f',
-  warning: '#ed6c02',
-  info: '#0288d1',
-  success: '#2e7d32',
-};
 
 /**
  * Fusionne les props customisées d'une catégorie avec les props passées.
@@ -47,26 +34,27 @@ const getCategoryProps = ({ label, sx = {}, ...props }) => {
  * - 'dot' : Disque coloré compact avec tooltip (pour les cards)
  * - 'chip' : Chip standard MUI avec icône (pour les filtres)
  *
+ * Les props restantes sont transmises au Chip ou au Box sous-jacent.
+ *
  * @param {Object} props - Props du composant
  * @param {string} props.label - Label de la catégorie à afficher
  * @param {'dot'|'chip'} [props.variant='chip'] - Variante d'affichage
- * @param {string} [props.size='small'] - Taille (pour variant='chip')
  * @returns {JSX.Element} Catégorie stylisée
  */
-const CategoryChip = ({ label, variant = 'chip', size: _size, ...props }) => {
-  const categoryConfig = categoryProps[label];
-
-  // Variant 'chip' (default)
-  const customProps = React.useMemo(() => getCategoryProps({ label, ...props }), [label, props]);
+const CategoryChip = ({ label, variant = 'chip', ...props }) => {
+  const theme = useTheme();
 
   if (variant === 'dot') {
-    const color = categoryConfig?.color || 'default';
-    const bgColor = colorMap[color] || '#757575';
+    const { sx: dotSx, ...dotProps } = props;
+    const color = categoryProps[label]?.color;
+    // Lire la palette du thème plutôt que des hex figés : le thème du projet
+    // redéfinit primary et secondary, des valeurs en dur les désaccorderaient.
+    const bgColor = theme.palette[color]?.main || theme.palette.grey[600];
 
     return (
       <Tooltip title={label} arrow>
         <Box
-          {...props}
+          {...dotProps}
           sx={{
             width: 16,
             height: 16,
@@ -76,14 +64,14 @@ const CategoryChip = ({ label, variant = 'chip', size: _size, ...props }) => {
             cursor: 'default',
             flexShrink: 0,
             verticalAlign: 'middle',
-            ...props.sx,
+            ...dotSx,
           }}
         />
       </Tooltip>
     );
   }
 
-  return <Chip {...customProps} />;
+  return <Chip {...getCategoryProps({ label, ...props })} />;
 };
 
 CategoryChip.displayName = 'CategoryChip';
