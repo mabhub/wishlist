@@ -81,15 +81,13 @@ const useReservations = (enabled = false) => {
       const previousReservations = queryClient.getQueryData(['reservations', activeListId]);
 
       // Optimistic update : ajouter immédiatement la réservation au cache
-      queryClient.setQueryData(['reservations', activeListId], old => {
-        return {
-          ...old,
-          [wishId]: {
-            id: 'temp-' + wishId, // ID temporaire jusqu'à la réponse du serveur
-            comment: comment || '',
-          },
-        };
-      });
+      queryClient.setQueryData(['reservations', activeListId], old => ({
+        ...old,
+        [wishId]: {
+          id: `temp-${wishId}`, // ID temporaire jusqu'à la réponse du serveur
+          comment: comment || '',
+        },
+      }));
 
       return { previousReservations };
     },
@@ -103,7 +101,7 @@ const useReservations = (enabled = false) => {
       // Mettre à jour avec l'ID réel du serveur
       queryClient.setQueryData(['reservations', activeListId], old => {
         if (!old || !old[wishId]) return old;
-        
+
         return {
           ...old,
           [wishId]: {
@@ -145,16 +143,16 @@ const useReservations = (enabled = false) => {
       // Optimistic update : retirer la réservation du cache
       queryClient.setQueryData(['reservations', activeListId], old => {
         if (!old) return old;
-        
+
         // Trouver la clé (wishId) correspondant à ce reservationId
         const wishIdToRemove = Object.keys(old).find(wishId => old[wishId]?.id === reservationId);
-        
+
         if (!wishIdToRemove) return old;
-        
+
         // Créer une copie sans cette réservation
         const newReservations = { ...old };
         delete newReservations[wishIdToRemove];
-        
+
         return newReservations;
       });
 
