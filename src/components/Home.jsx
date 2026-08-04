@@ -34,8 +34,6 @@ const Home = () => {
   const { listId } = useParams();
   const activeListId = listId || BASEROW_CONFIG.defaultListId;
   const [disabledCategories, setDisabledCategories] = React.useState([]);
-  // const [viewMode, setViewMode] = React.useState('grid');
-  // Mode liste temporairement désactivé - à moderniser
   const [giftMode, setGiftMode] = React.useState(false); // Mode offrir
   const [hideReserved, setHideReserved] = React.useState(false); // Masquer les produits réservés
   const { data, isLoading, error } = useWishlist();
@@ -71,13 +69,6 @@ const Home = () => {
   const toggleHideReserved = React.useCallback(() => {
     setHideReserved(prev => !prev);
   }, []);
-
-  /*
-  // Temporairement désactivé - mode liste à moderniser
-  const toggleViewMode = React.useCallback(() => {
-    setViewMode(prevMode => (prevMode === 'list' ? 'grid' : 'list'));
-  }, []);
-  */
 
   // Désactiver automatiquement le mode offrir après un délai d'inactivité
   React.useEffect(() => {
@@ -202,14 +193,6 @@ const Home = () => {
             />
           ))}
         </Box>
-
-        {/* Temporairement désactivé - mode liste à moderniser
-        <Tooltip title={viewMode === 'list' ? 'Affichage en grille' : 'Affichage en liste'}>
-          <IconButton onClick={toggleViewMode} aria-label="Changer le mode d'affichage">
-            {viewMode === 'list' ? <ViewModuleIcon /> : <ViewListIcon />}
-          </IconButton>
-        </Tooltip>
-        */}
 
         <Box sx={{ position: 'relative' }}>
           <Tooltip title={giftMode ? 'Masquer les réservations' : 'Mode offrir'}>
