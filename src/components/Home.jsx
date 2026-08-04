@@ -107,13 +107,21 @@ const Home = () => {
     [items],
   );
 
+  // Un item sans catégorie ne peut pas être ciblé par un chip : il suit l'état
+  // global du filtre, donc il n'est masqué que si toutes les catégories le sont.
+  const allFiltersDisabled = React.useMemo(
+    () => allCategories.length > 0 && disabledCategories.length === allCategories.length,
+    [allCategories, disabledCategories],
+  );
+
   const filteredItem = React.useMemo(
     () => sortedItems.filter(
       ({ categories = [], uuid }) => {
         // Filtrer par catégorie
-        const allCategoriesDisabled = categories.length
-          && categories.every(category => disabledCategories.includes(category));
-        if (allCategoriesDisabled) {
+        const isHiddenByCategory = categories.length
+          ? categories.every(category => disabledCategories.includes(category))
+          : allFiltersDisabled;
+        if (isHiddenByCategory) {
           return false;
         }
 
@@ -125,7 +133,7 @@ const Home = () => {
         return true;
       },
     ),
-    [disabledCategories, sortedItems, giftMode, hideReserved, reservations],
+    [disabledCategories, sortedItems, giftMode, hideReserved, reservations, allFiltersDisabled],
   );
 
   if (isLoading || isLoadingList) {
@@ -239,7 +247,7 @@ const Home = () => {
 
       <Grid container spacing={2}>
         {filteredItem.map(item => (
-          <Grid key={item.title} xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
+          <Grid key={item.uuid} xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
             <WishlistItemCard
               {...item}
               giftMode={giftMode}
