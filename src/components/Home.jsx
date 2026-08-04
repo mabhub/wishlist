@@ -79,7 +79,7 @@ const Home = () => {
   }, []);
   */
 
-  // Désactiver automatiquement le mode offrir après 5 minutes d'inactivité
+  // Désactiver automatiquement le mode offrir après un délai d'inactivité
   React.useEffect(() => {
     if (!giftMode) return noop;
 
