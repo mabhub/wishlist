@@ -37,16 +37,21 @@ const Home = () => {
   const [hideReserved, setHideReserved] = React.useState(false); // Masquer les produits réservés
   const { data, isLoading, error } = useWishlist();
   const { data: listInfo, isLoading: isLoadingList } = useListInfo();
+
+  const items = React.useMemo(() => data?.items || [], [data?.items]);
+  const allCategories = React.useMemo(() => data?.categories || [], [data?.categories]);
+
+  // Les réservations sont rattachées aux items, pas à la liste : il faut fournir
+  // les UUID de la liste courante pour écarter celles des autres listes.
+  const listItemUuids = React.useMemo(() => items.map(({ uuid }) => uuid), [items]);
+
   const {
     reservations,
     isLoading: isLoadingReservations,
     addReservation,
     updateReservation,
     cancelReservation,
-  } = useReservations(giftMode);
-
-  const items = React.useMemo(() => data?.items || [], [data?.items]);
-  const allCategories = React.useMemo(() => data?.categories || [], [data?.categories]);
+  } = useReservations(giftMode, listItemUuids);
 
   const handleChipClick = React.useCallback(
     (category = 'all') => () => {

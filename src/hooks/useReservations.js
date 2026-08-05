@@ -10,28 +10,37 @@ import useActiveListId from './useActiveListId';
 /**
  * Hook pour gérer les réservations d'une liste.
  *
+ * La table des réservations ne porte pas de colonne `list` : le rattachement à
+ * une liste passe uniquement par `wish`, l'UUID de l'item réservé. Les
+ * réservations sont donc restreintes aux items de la liste courante côté client
+ * — un filtre serveur sur `list` serait ignoré silencieusement par Baserow, qui
+ * renverrait les réservations de toutes les listes.
+ *
  * @param {boolean} enabled - Si true, charge les réservations
+ * @param {string[]} [listItemUuids=[]] - UUID des items de la liste courante
  * @returns {Object} Réservations indexées par UUID d'item, états de chargement,
  *   et mutations addReservation / updateReservation / cancelReservation
  */
-const useReservations = (enabled = false) => {
+const useReservations = (enabled = false, listItemUuids = []) => {
   const activeListId = useActiveListId();
   const queryClient = useQueryClient();
 
   // Query pour récupérer les réservations
   const query = useQuery({
-    queryKey: ['reservations', activeListId],
+    queryKey: ['reservations', activeListId, listItemUuids],
     queryFn: async () => {
       const rows = await fetchAllBaserowRows(
         BASEROW_CONFIG.reservationsTableId,
-        { list: activeListId },
+        {},
         'reservations',
       );
+
+      const listItems = new Set(listItemUuids);
 
       // Transformer les données : décoder les commentaires et indexer par wish UUID
       const reservationsMap = {};
       rows.forEach(reservation => {
-        if (reservation.wish) {
+        if (reservation.wish && listItems.has(reservation.wish)) {
           reservationsMap[reservation.wish] = {
             id: reservation.id,
             comment: reservation.comment ? decodeComment(reservation.comment, reservation.wish) : '',
@@ -55,7 +64,6 @@ const useReservations = (enabled = false) => {
         method: 'POST',
         ...getBaserowFetchOptions(),
         body: JSON.stringify({
-          list: activeListId,
           wish: wishId,
           comment: encodeComment(comment, wishId),
         }),
