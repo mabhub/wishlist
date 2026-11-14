@@ -1,3 +1,4 @@
+import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   BASEROW_CONFIG,
@@ -12,9 +13,9 @@ import useActiveListId from './useActiveListId';
  *
  * La table des réservations ne porte pas de colonne `list` : le rattachement à
  * une liste passe uniquement par `wish`, l'UUID de l'item réservé. Les
- * réservations sont donc restreintes aux items de la liste courante côté client
- * — un filtre serveur sur `list` serait ignoré silencieusement par Baserow, qui
- * renverrait les réservations de toutes les listes.
+ * réservations sont donc restreintes aux items de la liste courante côté client,
+ * à la lecture (option `select`) — un filtre serveur sur `list` serait ignoré
+ * silencieusement par Baserow, qui renverrait les réservations de toutes les listes.
  *
  * @param {boolean} enabled - Si true, charge les réservations
  * @param {string[]} [listItemUuids=[]] - UUID des items de la liste courante
@@ -25,9 +26,27 @@ const useReservations = (enabled = false, listItemUuids = []) => {
   const activeListId = useActiveListId();
   const queryClient = useQueryClient();
 
+  // Clé unique partagée par la query et les mutations : `setQueryData` et
+  // `getQueryData` comparent la clé exactement, une clé divergente ferait
+  // écrire les mises à jour optimistes dans une entrée que personne ne lit.
+  const queryKey = React.useMemo(() => ['reservations', activeListId], [activeListId]);
+
+  // Le cache contient toutes les réservations indexées par UUID d'item ; la
+  // restriction aux items de la liste courante se fait à la lecture (`select`).
+  const selectListReservations = React.useCallback(
+    allReservations => {
+      const listItems = new Set(listItemUuids);
+
+      return Object.fromEntries(
+        Object.entries(allReservations).filter(([wishId]) => listItems.has(wishId)),
+      );
+    },
+    [listItemUuids],
+  );
+
   // Query pour récupérer les réservations
   const query = useQuery({
-    queryKey: ['reservations', activeListId, listItemUuids],
+    queryKey,
     queryFn: async () => {
       const rows = await fetchAllBaserowRows(
         BASEROW_CONFIG.reservationsTableId,
@@ -35,12 +54,10 @@ const useReservations = (enabled = false, listItemUuids = []) => {
         'reservations',
       );
 
-      const listItems = new Set(listItemUuids);
-
       // Transformer les données : décoder les commentaires et indexer par wish UUID
       const reservationsMap = {};
       rows.forEach(reservation => {
-        if (reservation.wish && listItems.has(reservation.wish)) {
+        if (reservation.wish) {
           reservationsMap[reservation.wish] = {
             id: reservation.id,
             comment: reservation.comment ? decodeComment(reservation.comment, reservation.wish) : '',
@@ -50,6 +67,7 @@ const useReservations = (enabled = false, listItemUuids = []) => {
 
       return reservationsMap;
     },
+    select: selectListReservations,
     enabled,
     staleTime: 10 * 1000, // Cache 10 secondes (données très dynamiques)
     refetchInterval: enabled ? 15 * 1000 : false, // Rafraîchir toutes les 15 secondes en mode actif
@@ -77,13 +95,13 @@ const useReservations = (enabled = false, listItemUuids = []) => {
     },
     onMutate: async ({ wishId, comment }) => {
       // Annuler les requêtes en cours pour éviter les conflits
-      await queryClient.cancelQueries({ queryKey: ['reservations', activeListId] });
+      await queryClient.cancelQueries({ queryKey });
 
       // Sauvegarder l'état précédent pour rollback en cas d'erreur
-      const previousReservations = queryClient.getQueryData(['reservations', activeListId]);
+      const previousReservations = queryClient.getQueryData(queryKey);
 
       // Optimistic update : ajouter immédiatement la réservation au cache
-      queryClient.setQueryData(['reservations', activeListId], old => ({
+      queryClient.setQueryData(queryKey, old => ({
         ...old,
         [wishId]: {
           id: `temp-${wishId}`, // ID temporaire jusqu'à la réponse du serveur
@@ -96,12 +114,12 @@ const useReservations = (enabled = false, listItemUuids = []) => {
     onError: (err, variables, context) => {
       // Rollback en cas d'erreur
       if (context?.previousReservations) {
-        queryClient.setQueryData(['reservations', activeListId], context.previousReservations);
+        queryClient.setQueryData(queryKey, context.previousReservations);
       }
     },
     onSuccess: (data, { wishId }) => {
       // Mettre à jour avec l'ID réel du serveur
-      queryClient.setQueryData(['reservations', activeListId], old => {
+      queryClient.setQueryData(queryKey, old => {
         if (!old || !old[wishId]) return old;
 
         return {
@@ -115,7 +133,7 @@ const useReservations = (enabled = false, listItemUuids = []) => {
     },
     onSettled: () => {
       // Rafraîchir les données après succès ou erreur
-      queryClient.invalidateQueries({ queryKey: ['reservations', activeListId] });
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
@@ -139,12 +157,12 @@ const useReservations = (enabled = false, listItemUuids = []) => {
       return response.json();
     },
     onMutate: async ({ wishId, comment }) => {
-      await queryClient.cancelQueries({ queryKey: ['reservations', activeListId] });
+      await queryClient.cancelQueries({ queryKey });
 
-      const previousReservations = queryClient.getQueryData(['reservations', activeListId]);
+      const previousReservations = queryClient.getQueryData(queryKey);
 
       // Optimistic update : refléter immédiatement le nouveau commentaire
-      queryClient.setQueryData(['reservations', activeListId], old => {
+      queryClient.setQueryData(queryKey, old => {
         if (!old || !old[wishId]) return old;
 
         return {
@@ -160,11 +178,11 @@ const useReservations = (enabled = false, listItemUuids = []) => {
     },
     onError: (err, variables, context) => {
       if (context?.previousReservations) {
-        queryClient.setQueryData(['reservations', activeListId], context.previousReservations);
+        queryClient.setQueryData(queryKey, context.previousReservations);
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['reservations', activeListId] });
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
@@ -186,13 +204,13 @@ const useReservations = (enabled = false, listItemUuids = []) => {
     },
     onMutate: async reservationId => {
       // Annuler les requêtes en cours pour éviter les conflits
-      await queryClient.cancelQueries({ queryKey: ['reservations', activeListId] });
+      await queryClient.cancelQueries({ queryKey });
 
       // Sauvegarder l'état précédent pour rollback en cas d'erreur
-      const previousReservations = queryClient.getQueryData(['reservations', activeListId]);
+      const previousReservations = queryClient.getQueryData(queryKey);
 
       // Optimistic update : retirer la réservation du cache
-      queryClient.setQueryData(['reservations', activeListId], old => {
+      queryClient.setQueryData(queryKey, old => {
         if (!old) return old;
 
         // Trouver la clé (wishId) correspondant à ce reservationId
@@ -212,12 +230,12 @@ const useReservations = (enabled = false, listItemUuids = []) => {
     onError: (err, reservationId, context) => {
       // Rollback en cas d'erreur
       if (context?.previousReservations) {
-        queryClient.setQueryData(['reservations', activeListId], context.previousReservations);
+        queryClient.setQueryData(queryKey, context.previousReservations);
       }
     },
     onSettled: () => {
       // Rafraîchir les données après succès ou erreur
-      queryClient.invalidateQueries({ queryKey: ['reservations', activeListId] });
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
@@ -226,11 +244,8 @@ const useReservations = (enabled = false, listItemUuids = []) => {
     isLoading: query.isLoading,
     error: query.error,
     addReservation: addReservationMutation.mutate,
-    isAddingReservation: addReservationMutation.isPending,
     updateReservation: updateReservationMutation.mutate,
-    isUpdatingReservation: updateReservationMutation.isPending,
     cancelReservation: deleteReservationMutation.mutate,
-    isCancelingReservation: deleteReservationMutation.isPending,
   };
 };
 
