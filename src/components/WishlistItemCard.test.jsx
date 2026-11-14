@@ -40,6 +40,24 @@ describe('WishlistItemCard', () => {
       expect(screen.getByText('belle').tagName).toBe('STRONG'); // description en Markdown
     });
 
+    it('date la création et la modification dans les détails, sans prop de style dans le DOM', () => {
+      const { container } = render(
+        <WishlistItemCard
+          {...ITEM}
+          description={DESCRIPTION}
+          createdOn="2026-01-05T10:00:00Z"
+          lastModifiedOn="2026-02-10T10:00:00Z"
+        />,
+      );
+
+      openTab('Détails');
+
+      expect(screen.getByText(/Créé le/).textContent).toContain('5 janvier 2026');
+      expect(screen.getByText(/Modifié le/).textContent).toContain('10 février 2026');
+      // Une prop système retirée par MUI finit en attribut HTML inerte.
+      expect(container.querySelector('[display]')).toBeNull();
+    });
+
     it.each([
       ['sans description', undefined, ['Aperçu', 'Offrir']],
       ['avec description', DESCRIPTION, ['Aperçu', 'Détails', 'Offrir']],

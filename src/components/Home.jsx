@@ -14,7 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
-import Grid from '@mui/material/Unstable_Grid2';
+import Grid from '@mui/material/Grid';
 
 import WishlistItemCard from './WishlistItemCard';
 import CategoryChip from './CategoryChip';
@@ -294,7 +294,7 @@ const Home = () => {
 
       <Grid container spacing={2}>
         {filteredItem.map(item => (
-          <Grid key={item.uuid} xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
+          <Grid key={item.uuid} size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
             <WishlistItemCard
               {...item}
               giftMode={giftMode}
@@ -313,7 +313,7 @@ const Home = () => {
         open={isErrorOpen}
         autoHideDuration={8000}
         onClose={handleCloseError}
-        TransitionProps={{ onExited: clearMutationError }}
+        slotProps={{ transition: { onExited: clearMutationError } }}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
         <Alert

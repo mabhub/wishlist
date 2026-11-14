@@ -321,13 +321,13 @@ const WishlistItemCard = ({
             {(createdOn || lastModifiedOn) && (
               <Stack sx={{ mt: 2, pt: 2, opacity: 0.4 }} direction="row">
                 {createdOn && (
-                  <Typography variant="caption" color="text.secondary" display="block" sx={{ lineHeight: 1, letterSpacing: -0.05 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1, letterSpacing: -0.05 }}>
                     Créé le<br />
                     {new Date(createdOn).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </Typography>
                 )}
                 {lastModifiedOn && (
-                  <Typography variant="caption" color="text.secondary" display="block" sx={{ textAlign: 'right', ml: 'auto', lineHeight: 1, letterSpacing: -0.05 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'right', ml: 'auto', lineHeight: 1, letterSpacing: -0.05 }}>
                     Modifié le<br />
                     {new Date(lastModifiedOn).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </Typography>
