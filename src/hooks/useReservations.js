@@ -241,7 +241,9 @@ const useReservations = (enabled = false, listItemUuids = []) => {
 
   return {
     reservations: query.data || {},
-    isLoading: query.isLoading,
+    // `isLoading` vaut true en v4 pour une query désactivée sans données :
+    // seul le premier chargement effectif doit afficher un indicateur.
+    isLoading: query.isInitialLoading,
     error: query.error,
     addReservation: addReservationMutation.mutate,
     updateReservation: updateReservationMutation.mutate,

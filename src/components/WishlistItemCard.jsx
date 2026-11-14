@@ -183,7 +183,7 @@ const WishlistItemCard = ({
           >
             <Tab label="Aperçu" />
             {detailsTab > 0 && <Tab label="Détails" />}
-            {isLoadingReservations && <Tab label={<CircularProgress size="small" />} />}
+            {isLoadingReservations && <Tab label={<CircularProgress size={16} />} />}
             {giftMode && !isLoadingReservations && (<Tab label={isReserved ? 'Réservé' : 'Offrir'} />)}
           </Tabs>
         )}
