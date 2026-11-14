@@ -23,6 +23,7 @@ import useListInfo from '../hooks/useListInfo';
 import useReservations from '../hooks/useReservations';
 import useActiveListId from '../hooks/useActiveListId';
 import { toggle } from '../utils/array';
+import { ALREADY_RESERVED } from '../utils/reservations';
 
 const noop = () => {};
 
@@ -36,6 +37,12 @@ const RESERVATION_ERROR_MESSAGES = {
   update: 'La modification n\'a pas pu être enregistrée. Réessayez dans un instant.',
   cancel: 'L\'annulation n\'a pas pu être enregistrée. Réessayez dans un instant.',
 };
+
+/**
+ * Message affiché quand quelqu'un a réservé le même cadeau juste avant.
+ * Ce n'est pas une panne : la liste se met à jour et montre le cadeau réservé.
+ */
+const ALREADY_RESERVED_MESSAGE = 'Ce cadeau vient d\'être réservé par quelqu\'un d\'autre.';
 
 /**
  * Page d'accueil affichant la wishlist complète avec filtrage par catégories.
@@ -74,6 +81,11 @@ const Home = () => {
   React.useEffect(() => {
     if (mutationError) setIsErrorOpen(true);
   }, [mutationError]);
+
+  const isAlreadyReserved = mutationError?.error?.code === ALREADY_RESERVED;
+  const errorMessage = isAlreadyReserved
+    ? ALREADY_RESERVED_MESSAGE
+    : RESERVATION_ERROR_MESSAGES[mutationError?.action];
 
   const handleCloseError = React.useCallback((event, reason) => {
     // Un clic ailleurs dans la page ne doit pas faire disparaître l'alerte
@@ -304,8 +316,13 @@ const Home = () => {
         TransitionProps={{ onExited: clearMutationError }}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert onClose={handleCloseError} severity="error" variant="filled" sx={{ width: '100%' }}>
-          {RESERVATION_ERROR_MESSAGES[mutationError?.action]}
+        <Alert
+          onClose={handleCloseError}
+          severity={isAlreadyReserved ? 'warning' : 'error'}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {errorMessage}
         </Alert>
       </Snackbar>
     </Container>

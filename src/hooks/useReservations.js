@@ -5,7 +5,8 @@ import {
   fetchAllBaserowRows,
   getBaserowFetchOptions,
 } from '../config/baserow';
-import { encodeComment, decodeComment } from '../utils/encoding';
+import { encodeComment } from '../utils/encoding';
+import { ALREADY_RESERVED, buildReservationsMap, hasReservationFor } from '../utils/reservations';
 import useActiveListId from './useActiveListId';
 
 /**
@@ -61,18 +62,7 @@ const useReservations = (enabled = false, listItemUuids = []) => {
         'reservations',
       );
 
-      // Transformer les données : décoder les commentaires et indexer par wish UUID
-      const reservationsMap = {};
-      rows.forEach(reservation => {
-        if (reservation.wish) {
-          reservationsMap[reservation.wish] = {
-            id: reservation.id,
-            comment: reservation.comment ? decodeComment(reservation.comment, reservation.wish) : '',
-          };
-        }
-      });
-
-      return reservationsMap;
+      return buildReservationsMap(rows);
     },
     select: selectListReservations,
     enabled,
@@ -83,6 +73,20 @@ const useReservations = (enabled = false, listItemUuids = []) => {
   // Mutation pour ajouter une réservation
   const addReservationMutation = useMutation({
     mutationFn: async ({ wishId, comment }) => {
+      // Le cache peut avoir jusqu'à 15 s de retard : relire l'état serveur
+      // évite de réserver un cadeau que quelqu'un vient de prendre.
+      const existing = await fetchAllBaserowRows(
+        BASEROW_CONFIG.reservationsTableId,
+        { wish: wishId },
+        'reservations',
+      );
+
+      if (hasReservationFor(existing, wishId)) {
+        const error = new Error('Wish already reserved');
+        error.code = ALREADY_RESERVED;
+        throw error;
+      }
+
       const url = `${BASEROW_CONFIG.baseUrl}/api/database/rows/table/${BASEROW_CONFIG.reservationsTableId}/?user_field_names=true`;
 
       const response = await fetch(url, {
