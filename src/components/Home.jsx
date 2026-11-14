@@ -13,7 +13,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import Grid from '@mui/material/Grid';
 
 import WishlistItemCard from './WishlistItemCard';

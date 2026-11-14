@@ -27,7 +27,8 @@ module.exports = {
     'import/extensions': [warn],
     'import/no-extraneous-dependencies': [warn, { devDependencies: ['**/*.test.{js,jsx}', '**/*.spec.js', '**/*.stories.js', 'src/test/**'] }],
     'import/no-named-as-default': [off],
-    'import/no-unresolved': [warn],
+    // react-router 8 n'expose que `exports`, que eslint-plugin-import ne résout pas.
+    'import/no-unresolved': [warn, { ignore: ['^react-router$'] }],
     'import/prefer-default-export': [off],
 
     'jsx-a11y/anchor-is-valid': [error, { specialLink: ['to'] }],
