@@ -42,10 +42,10 @@ const transformBaserowData = baserowItems => {
 /**
  * Hook pour charger les données de la wishlist depuis Baserow.
  *
- * @returns {Object} Résultat de la query avec data, isLoading, error
+ * @returns {Object} Résultat de la query avec data, isPending, error
  * @returns {Array} data.items - Items de la wishlist
  * @returns {Array} data.categories - Liste des catégories uniques
- * @returns {boolean} isLoading - État de chargement
+ * @returns {boolean} isPending - Aucune donnée encore reçue
  * @returns {Error|null} error - Erreur éventuelle
  */
 const useWishlist = () => {

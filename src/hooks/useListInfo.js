@@ -5,11 +5,11 @@ import useActiveListId from './useActiveListId';
 /**
  * Hook pour charger les informations d'une liste depuis Baserow.
  *
- * @returns {Object} Résultat de la query avec data, isLoading, error
+ * @returns {Object} Résultat de la query avec data, isPending, error
  * @returns {Object|null} data - Informations de la liste
  * @returns {string} data.title - Titre de la liste
  * @returns {string} data.for - Destinataire de la liste
- * @returns {boolean} isLoading - État de chargement
+ * @returns {boolean} isPending - Aucune donnée encore reçue
  * @returns {Error|null} error - Erreur éventuelle
  */
 const useListInfo = () => {

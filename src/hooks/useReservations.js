@@ -258,9 +258,9 @@ const useReservations = (enabled = false, listItemUuids = []) => {
 
   return {
     reservations: query.data || {},
-    // `isLoading` vaut true en v4 pour une query désactivée sans données :
-    // seul le premier chargement effectif doit afficher un indicateur.
-    isLoading: query.isInitialLoading,
+    // En v5, `isLoading` (= `isPending && isFetching`) reste faux pour une
+    // query désactivée : seul un premier chargement effectif l'active.
+    isLoading: query.isLoading,
     error: query.error,
     addReservation: addReservationMutation.mutate,
     updateReservation: updateReservationMutation.mutate,

@@ -123,8 +123,6 @@ describe('useReservations', () => {
 
     queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
-      // TanStack Query v4 journalise les échecs, ici provoqués exprès.
-      logger: { log: () => {}, warn: () => {}, error: () => {} },
     });
   });
 

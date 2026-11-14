@@ -54,8 +54,8 @@ const Home = () => {
   const [disabledCategories, setDisabledCategories] = React.useState([]);
   const [giftMode, setGiftMode] = React.useState(false); // Mode offrir
   const [hideReserved, setHideReserved] = React.useState(false); // Masquer les produits réservés
-  const { data, isLoading, error } = useWishlist();
-  const { data: listInfo, isLoading: isLoadingList } = useListInfo();
+  const { data, isPending: isLoading, error } = useWishlist();
+  const { data: listInfo, isPending: isLoadingList } = useListInfo();
 
   const items = React.useMemo(() => data?.items || [], [data?.items]);
   const allCategories = React.useMemo(() => data?.categories || [], [data?.categories]);
