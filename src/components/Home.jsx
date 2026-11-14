@@ -8,6 +8,7 @@ import {
   Divider,
   FormControlLabel,
   IconButton,
+  Snackbar,
   Switch,
   Tooltip,
   Typography,
@@ -24,6 +25,17 @@ import useActiveListId from '../hooks/useActiveListId';
 import { toggle } from '../utils/array';
 
 const noop = () => {};
+
+/**
+ * Message affiché quand l'écriture d'une réservation échoue, par action.
+ * L'action optimiste a déjà été annulée à l'écran : le message dit ce qui
+ * n'a pas été pris en compte.
+ */
+const RESERVATION_ERROR_MESSAGES = {
+  add: 'La réservation n\'a pas pu être enregistrée. Réessayez dans un instant.',
+  update: 'La modification n\'a pas pu être enregistrée. Réessayez dans un instant.',
+  cancel: 'L\'annulation n\'a pas pu être enregistrée. Réessayez dans un instant.',
+};
 
 /**
  * Page d'accueil affichant la wishlist complète avec filtrage par catégories.
@@ -51,7 +63,24 @@ const Home = () => {
     addReservation,
     updateReservation,
     cancelReservation,
+    mutationError,
+    clearMutationError,
   } = useReservations(giftMode, listItemUuids);
+
+  // L'ouverture est découplée de l'erreur : celle-ci n'est effacée qu'après
+  // la transition de sortie, sinon l'alerte se viderait pendant le fondu.
+  const [isErrorOpen, setIsErrorOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (mutationError) setIsErrorOpen(true);
+  }, [mutationError]);
+
+  const handleCloseError = React.useCallback((event, reason) => {
+    // Un clic ailleurs dans la page ne doit pas faire disparaître l'alerte
+    // avant qu'elle ait pu être lue.
+    if (reason === 'clickaway') return;
+    setIsErrorOpen(false);
+  }, []);
 
   const handleChipClick = React.useCallback(
     (category = 'all') => () => {
@@ -267,6 +296,18 @@ const Home = () => {
           </Grid>
         ))}
       </Grid>
+
+      <Snackbar
+        open={isErrorOpen}
+        autoHideDuration={8000}
+        onClose={handleCloseError}
+        TransitionProps={{ onExited: clearMutationError }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseError} severity="error" variant="filled" sx={{ width: '100%' }}>
+          {RESERVATION_ERROR_MESSAGES[mutationError?.action]}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

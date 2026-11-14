@@ -20,11 +20,18 @@ import useActiveListId from './useActiveListId';
  * @param {boolean} enabled - Si true, charge les réservations
  * @param {string[]} [listItemUuids=[]] - UUID des items de la liste courante
  * @returns {Object} Réservations indexées par UUID d'item, états de chargement,
- *   et mutations addReservation / updateReservation / cancelReservation
+ *   mutations addReservation / updateReservation / cancelReservation, et
+ *   dernier échec d'écriture (`mutationError` : `{ action, error }`, remis à
+ *   zéro par `clearMutationError`)
  */
 const useReservations = (enabled = false, listItemUuids = []) => {
   const activeListId = useActiveListId();
   const queryClient = useQueryClient();
+
+  // Dernier échec d'écriture, pour que l'interface puisse le signaler : sans
+  // lui, le rollback optimiste annulait l'action sans aucune explication.
+  const [mutationError, setMutationError] = React.useState(null);
+  const clearMutationError = React.useCallback(() => setMutationError(null), []);
 
   // Clé unique partagée par la query et les mutations : `setQueryData` et
   // `getQueryData` comparent la clé exactement, une clé divergente ferait
@@ -112,6 +119,8 @@ const useReservations = (enabled = false, listItemUuids = []) => {
       return { previousReservations };
     },
     onError: (err, variables, context) => {
+      setMutationError({ action: 'add', error: err });
+
       // Rollback en cas d'erreur
       if (context?.previousReservations) {
         queryClient.setQueryData(queryKey, context.previousReservations);
@@ -177,6 +186,8 @@ const useReservations = (enabled = false, listItemUuids = []) => {
       return { previousReservations };
     },
     onError: (err, variables, context) => {
+      setMutationError({ action: 'update', error: err });
+
       if (context?.previousReservations) {
         queryClient.setQueryData(queryKey, context.previousReservations);
       }
@@ -228,6 +239,8 @@ const useReservations = (enabled = false, listItemUuids = []) => {
       return { previousReservations };
     },
     onError: (err, reservationId, context) => {
+      setMutationError({ action: 'cancel', error: err });
+
       // Rollback en cas d'erreur
       if (context?.previousReservations) {
         queryClient.setQueryData(queryKey, context.previousReservations);
@@ -248,6 +261,8 @@ const useReservations = (enabled = false, listItemUuids = []) => {
     addReservation: addReservationMutation.mutate,
     updateReservation: updateReservationMutation.mutate,
     cancelReservation: deleteReservationMutation.mutate,
+    mutationError,
+    clearMutationError,
   };
 };
 
