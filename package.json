@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "eslint . --ext js,jsx",
+    "lint": "oxlint",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
     "serve": "vite preview",
     "start": "vite",
     "test": "vitest run",
@@ -28,9 +30,9 @@
   "devDependencies": {
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
-    "eslint": "^8.31.0",
-    "eslint-config-airbnb": "^19.0.4",
     "jsdom": "^31.0.1",
+    "oxfmt": "^0.78.0",
+    "oxlint": "^1.93.0",
     "vitest": "^5.1.0"
   }
 }

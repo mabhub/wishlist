@@ -490,6 +490,8 @@ const WishlistItemCard = ({
           <Button onClick={handleCloseCancelDialog} color="secondary" variant="outlined">
             Non, garder
           </Button>
+          {/* Focus voulu : la modale vient d'être ouverte par l'utilisateur. */}
+          {/* oxlint-disable-next-line jsx-a11y/no-autofocus */}
           <Button onClick={handleConfirmCancel} color="primary" variant="contained" autoFocus>
             Oui, annuler
           </Button>
