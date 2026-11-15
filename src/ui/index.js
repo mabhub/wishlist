@@ -8,3 +8,6 @@
 export { theme } from './theme';
 export { default as CategoryChip } from '../components/CategoryChip';
 export { categoryProps } from '../constants/categories';
+export { default as WishlistItemCard } from '../components/WishlistItemCard';
+export { default as WishlistView } from '../components/WishlistView';
+export { default as useCategoryFilter } from '../hooks/useCategoryFilter';

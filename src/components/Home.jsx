@@ -1,31 +1,28 @@
 import React from 'react';
 import {
   Alert,
-  Box,
-  Chip,
   CircularProgress,
   Container,
-  Divider,
   FormControlLabel,
-  IconButton,
   Snackbar,
   Switch,
-  Tooltip,
-  Typography,
 } from '@mui/material';
 import { Link } from 'react-router';
-import Grid from '@mui/material/Grid';
 
-import WishlistItemCard from './WishlistItemCard';
-import CategoryChip from './CategoryChip';
+import WishlistView from './WishlistView';
+import ReservableItemCard from './ReservableItemCard';
+import GiftModeButton from './GiftModeButton';
 import useWishlist from '../hooks/useWishlist';
 import useListInfo from '../hooks/useListInfo';
 import useReservations from '../hooks/useReservations';
 import useActiveListId from '../hooks/useActiveListId';
-import { toggle } from '../utils/array';
+import useCategoryFilter from '../hooks/useCategoryFilter';
 import { ALREADY_RESERVED } from '../utils/reservations';
 
 const noop = () => {};
+
+/** Clé React d'un item : son UUID Baserow. */
+const getItemKey = ({ uuid }) => uuid;
 
 /**
  * Message affiché quand l'écriture d'une réservation échoue, par action.
@@ -45,13 +42,13 @@ const RESERVATION_ERROR_MESSAGES = {
 const ALREADY_RESERVED_MESSAGE = "Ce cadeau vient d'être réservé par quelqu'un d'autre.";
 
 /**
- * Page d'accueil affichant la wishlist complète avec filtrage par catégories.
+ * Page d'accueil : conteneur qui relie Baserow (items, liste, réservations) et le mode
+ * offrir à la vue présentationnelle `WishlistView`.
  *
  * @returns {JSX.Element} Page Home avec liste filtrée
  */
 const Home = () => {
   const activeListId = useActiveListId();
-  const [disabledCategories, setDisabledCategories] = React.useState([]);
   const [giftMode, setGiftMode] = React.useState(false); // Mode offrir
   const [hideReserved, setHideReserved] = React.useState(false); // Masquer les produits réservés
   const { data, isPending: isLoading, error } = useWishlist();
@@ -59,6 +56,7 @@ const Home = () => {
 
   const items = React.useMemo(() => data?.items || [], [data?.items]);
   const allCategories = React.useMemo(() => data?.categories || [], [data?.categories]);
+  const { disabledCategories, onCategoryClick, isVisible } = useCategoryFilter(allCategories);
 
   // Les réservations sont rattachées aux items, pas à la liste : il faut fournir
   // les UUID de la liste courante pour écarter celles des autres listes.
@@ -94,19 +92,6 @@ const Home = () => {
       setDismissedError(mutationError);
     },
     [mutationError],
-  );
-
-  const handleChipClick = React.useCallback(
-    (category = 'all') =>
-      () => {
-        setDisabledCategories(prevDisabledCategories => {
-          if (category === 'all') {
-            return prevDisabledCategories.length ? [] : [...allCategories];
-          }
-          return toggle(prevDisabledCategories, category);
-        });
-      },
-    [allCategories],
   );
 
   const toggleGiftMode = React.useCallback(() => {
@@ -155,32 +140,36 @@ const Home = () => {
     [items],
   );
 
-  // Un item sans catégorie ne peut pas être ciblé par un chip : il suit l'état
-  // global du filtre, donc il n'est masqué que si toutes les catégories le sont.
-  const allFiltersDisabled = React.useMemo(
-    () => allCategories.length > 0 && disabledCategories.length === allCategories.length,
-    [allCategories, disabledCategories],
+  const filteredItems = React.useMemo(
+    () =>
+      sortedItems.filter(
+        item =>
+          // Filtrer par catégorie, puis les produits réservés si le mode est actif
+          isVisible(item) && !(giftMode && hideReserved && reservations[item.uuid]),
+      ),
+    [sortedItems, isVisible, giftMode, hideReserved, reservations],
   );
 
-  const filteredItem = React.useMemo(
-    () =>
-      sortedItems.filter(({ categories = [], uuid }) => {
-        // Filtrer par catégorie
-        const isHiddenByCategory = categories.length
-          ? categories.every(category => disabledCategories.includes(category))
-          : allFiltersDisabled;
-        if (isHiddenByCategory) {
-          return false;
-        }
-
-        // Filtrer les produits réservés si le mode est actif
-        if (giftMode && hideReserved && reservations[uuid]) {
-          return false;
-        }
-
-        return true;
-      }),
-    [disabledCategories, sortedItems, giftMode, hideReserved, reservations, allFiltersDisabled],
+  const renderItem = React.useCallback(
+    item => (
+      <ReservableItemCard
+        item={item}
+        giftMode={giftMode}
+        isLoadingReservations={isLoadingReservations}
+        reservation={reservations[item.uuid]}
+        onReserve={addReservation}
+        onUpdateReservation={updateReservation}
+        onCancelReservation={cancelReservation}
+      />
+    ),
+    [
+      giftMode,
+      isLoadingReservations,
+      reservations,
+      addReservation,
+      updateReservation,
+      cancelReservation,
+    ],
   );
 
   if (isLoading || isLoadingList) {
@@ -200,108 +189,40 @@ const Home = () => {
   }
 
   return (
-    <Container sx={{ py: 4 }}>
-      {listInfo && (
-        <Box sx={{ mb: 3, textAlign: 'center' }}>
-          {listInfo.title && (
-            <Typography variant="h4" component="h1" gutterBottom>
-              <Link
-                to={`/list/${activeListId}`}
-                style={{
-                  color: 'inherit',
-                  textDecoration: 'none',
-                }}
-              >
-                {listInfo.title}
-              </Link>
-            </Typography>
-          )}
-          {listInfo.for && (
-            <Typography variant="subtitle1" color="text.secondary">
-              Pour {listInfo.for}
-            </Typography>
-          )}
-        </Box>
-      )}
-
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <Box sx={{ flexGrow: 1 }}>
-          <CategoryChip
-            label="Tout"
-            onClick={handleChipClick()}
-            aria-pressed={disabledCategories.length === 0}
-          />
-
-          {allCategories.map(category => (
-            <CategoryChip
-              key={category}
-              label={category}
-              onClick={handleChipClick(category)}
-              aria-pressed={!disabledCategories.includes(category)}
-              sx={{
-                opacity: disabledCategories.includes(category) ? 0.2 : 1,
-                ml: 1,
+    <>
+      <WishlistView
+        title={
+          listInfo?.title && (
+            <Link
+              to={`/list/${activeListId}`}
+              style={{
+                color: 'inherit',
+                textDecoration: 'none',
               }}
-            />
-          ))}
-        </Box>
-
-        <Box sx={{ position: 'relative' }}>
-          <Tooltip title={giftMode ? 'Masquer les réservations' : 'Mode offrir'}>
-            <IconButton
-              onClick={toggleGiftMode}
-              aria-label="Activer le mode offrir"
-              color={giftMode ? 'primary' : 'default'}
-              sx={{ fontSize: '5rem' }}
             >
-              🎁
-              <Chip
-                label="Offrir"
-                size="small"
-                color={giftMode ? 'primary' : 'default'}
-                sx={{
-                  left: '50%',
-                  top: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  bgcolor: giftMode ? 'primary.main' : 'rgba(0, 0, 0, 0.5)',
-                  color: giftMode ? 'primary.contrastText' : '#fff',
-                  position: 'absolute',
-                }}
-              />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Box>
-
-      <Divider sx={{ my: 2 }} />
-
-      {giftMode && (
-        <Box sx={{ mb: 2 }}>
-          <FormControlLabel
-            control={
-              <Switch checked={hideReserved} onChange={toggleHideReserved} color="primary" />
-            }
-            label="Masquer les produits déjà réservés"
-          />
-        </Box>
-      )}
-
-      <Grid container spacing={2}>
-        {filteredItem.map(item => (
-          <Grid key={item.uuid} size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
-            <WishlistItemCard
-              {...item}
-              giftMode={giftMode}
-              isLoadingReservations={isLoadingReservations}
-              isReserved={giftMode && reservations[item.uuid]}
-              reservation={giftMode ? reservations[item.uuid] : null}
-              onReserve={addReservation}
-              onUpdateReservation={updateReservation}
-              onCancelReservation={cancelReservation}
+              {listInfo.title}
+            </Link>
+          )
+        }
+        subtitle={listInfo?.for && `Pour ${listInfo.for}`}
+        categories={allCategories}
+        disabledCategories={disabledCategories}
+        onCategoryClick={onCategoryClick}
+        actions={<GiftModeButton active={giftMode} onClick={toggleGiftMode} />}
+        beforeGrid={
+          giftMode && (
+            <FormControlLabel
+              control={
+                <Switch checked={hideReserved} onChange={toggleHideReserved} color="primary" />
+              }
+              label="Masquer les produits déjà réservés"
             />
-          </Grid>
-        ))}
-      </Grid>
+          )
+        }
+        items={filteredItems}
+        getItemKey={getItemKey}
+        renderItem={renderItem}
+      />
 
       <Snackbar
         open={isErrorOpen}
@@ -319,7 +240,7 @@ const Home = () => {
           {errorMessage}
         </Alert>
       </Snackbar>
-    </Container>
+    </>
   );
 };
 

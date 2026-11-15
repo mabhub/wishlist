@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   Box,
-  Button,
   Card,
   CardActionArea,
   CardContent,
@@ -9,15 +8,9 @@ import {
   Chip,
   CircularProgress,
   Collapse,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   Stack,
   Tab,
   Tabs,
-  TextField,
   Typography,
 } from '@mui/material';
 import ReactMarkdown from 'react-markdown';
@@ -27,10 +20,11 @@ const blankImage =
   'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect x="0" y="0" width="200" height="200" fill="white" /></svg>';
 
 /**
- * Composant affichant un item de wishlist en mode vignette (card).
+ * Composant affichant un item de wishlist en mode vignette (card). Exporté dans
+ * `wishlist/ui` : il ne connaît ni Baserow ni la façon de réserver, l'appelant fournit
+ * le contenu de l'onglet de réservation par `renderReservation`.
  *
  * @param {Object} props - Props du composant
- * @param {string} props.uuid - UUID unique de l'item
  * @param {string} props.title - Titre de l'item
  * @param {string} [props.link] - Lien URL de l'item
  * @param {string} [props.brand] - Marque de l'item
@@ -40,17 +34,17 @@ const blankImage =
  * @param {string} [props.description] - Description complète du produit
  * @param {string} [props.createdOn] - Date de création ISO 8601
  * @param {string} [props.lastModifiedOn] - Date de dernière modification ISO 8601
- * @param {boolean} [props.giftMode=false] - Mode offrir activé
- * @param {boolean} [props.isLoadingReservations=false] - Chargement des réservations en cours
+ * @param {string} [props.price] - Prix déjà formaté par l'appelant, affiché tel quel
  * @param {boolean} [props.isReserved=false] - Si true, l'élément est réservé
- * @param {Object} [props.reservation] - Informations de réservation (comment)
- * @param {Function} [props.onReserve] - Callback pour réserver un élément
- * @param {Function} [props.onUpdateReservation] - Callback pour modifier le commentaire
- * @param {Function} [props.onCancelReservation] - Callback pour annuler une réservation
+ * @param {boolean} [props.isLoadingReservations=false] - Chargement des réservations en
+ *   cours : l'onglet de réservation affiche un indicateur
+ * @param {Function} [props.renderReservation] - `({ showPreview }) => ReactNode` : contenu
+ *   de l'onglet de réservation ; sans lui, ni onglet ni pastille de réservation.
+ *   `showPreview` ramène la carte à l'aperçu
+ * @param {Object} [props.sx] - Styles appliqués au conteneur de la carte
  * @returns {JSX.Element} Item de wishlist en mode card
  */
 const WishlistItemCard = ({
-  uuid,
   title,
   link,
   brand,
@@ -60,20 +54,14 @@ const WishlistItemCard = ({
   description,
   createdOn,
   lastModifiedOn,
-  giftMode = false,
-  isLoadingReservations = false,
+  price,
   isReserved = false,
-  reservation = null,
-  onReserve,
-  onUpdateReservation,
-  onCancelReservation,
+  isLoadingReservations = false,
+  renderReservation,
   sx = {},
 }) => {
   const [activeTab, setActiveTab] = React.useState(0);
-  const [reservationComment, setReservationComment] = React.useState('');
-  const [isEditingReservation, setIsEditingReservation] = React.useState(false);
-  const [editedComment, setEditedComment] = React.useState('');
-  const [showCancelDialog, setShowCancelDialog] = React.useState(false);
+  const hasReservation = Boolean(renderReservation);
 
   // Index des onglets : l'onglet Détails n'existe que si une description est
   // fournie, ce qui décale l'onglet de réservation d'un cran.
@@ -81,10 +69,10 @@ const WishlistItemCard = ({
   const detailsTab = description ? 1 : -1;
   const reservationTab = description ? 2 : 1;
 
-  // Revenir à l'aperçu quand le mode offrir est désactivé. Fait pendant le rendu
+  // Revenir à l'aperçu quand l'onglet de réservation disparaît. Fait pendant le rendu
   // et non dans un effet : React relance aussitôt le rendu, et `Tabs` ne reçoit
   // jamais l'index d'un onglet de réservation qui n'existe plus.
-  if (!giftMode && activeTab >= reservationTab) {
+  if (!hasReservation && activeTab >= reservationTab) {
     setActiveTab(PREVIEW_TAB);
   }
 
@@ -98,52 +86,6 @@ const WishlistItemCard = ({
 
   const showPreviewTab = React.useCallback(() => {
     setActiveTab(PREVIEW_TAB);
-  }, []);
-
-  const handleReservationConfirm = React.useCallback(() => {
-    if (onReserve) {
-      onReserve({ wishId: uuid, comment: reservationComment });
-      setReservationComment('');
-      setActiveTab(PREVIEW_TAB);
-    }
-  }, [onReserve, uuid, reservationComment]);
-
-  const handleCancelReservation = React.useCallback(() => {
-    setShowCancelDialog(true);
-  }, []);
-
-  const handleConfirmCancel = React.useCallback(() => {
-    if (onCancelReservation && reservation?.id) {
-      onCancelReservation(reservation.id);
-      setActiveTab(PREVIEW_TAB);
-    }
-    setShowCancelDialog(false);
-    setIsEditingReservation(false);
-  }, [onCancelReservation, reservation]);
-
-  const handleCloseCancelDialog = React.useCallback(() => {
-    setShowCancelDialog(false);
-  }, []);
-
-  const handleEditReservation = React.useCallback(() => {
-    setEditedComment(reservation?.comment || '');
-    setIsEditingReservation(true);
-  }, [reservation]);
-
-  const handleSaveEditedReservation = React.useCallback(() => {
-    if (onUpdateReservation && reservation?.id) {
-      onUpdateReservation({
-        reservationId: reservation.id,
-        wishId: uuid,
-        comment: editedComment,
-      });
-      setIsEditingReservation(false);
-    }
-  }, [onUpdateReservation, reservation, uuid, editedComment]);
-
-  const handleCancelEdit = React.useCallback(() => {
-    setIsEditingReservation(false);
-    setEditedComment('');
   }, []);
 
   return (
@@ -164,7 +106,7 @@ const WishlistItemCard = ({
         }}
         elevation={5}
       >
-        {(description || giftMode) && (
+        {(description || hasReservation) && (
           <Tabs
             value={activeTab}
             onChange={handleTabChange}
@@ -184,8 +126,10 @@ const WishlistItemCard = ({
           >
             <Tab label="Aperçu" />
             {detailsTab > 0 && <Tab label="Détails" />}
-            {isLoadingReservations && <Tab label={<CircularProgress size={16} />} />}
-            {giftMode && !isLoadingReservations && (
+            {hasReservation && isLoadingReservations && (
+              <Tab label={<CircularProgress size={16} />} />
+            )}
+            {hasReservation && !isLoadingReservations && (
               <Tab label={isReserved ? 'Réservé' : 'Offrir'} />
             )}
           </Tabs>
@@ -205,7 +149,7 @@ const WishlistItemCard = ({
               }}
             />
 
-            {giftMode && isReserved && (
+            {hasReservation && isReserved && (
               <Box
                 sx={{
                   width: '100%',
@@ -231,7 +175,7 @@ const WishlistItemCard = ({
               </Box>
             )}
 
-            {giftMode && !isReserved && (
+            {hasReservation && !isReserved && (
               <Box
                 sx={{
                   width: '100%',
@@ -301,6 +245,12 @@ const WishlistItemCard = ({
                 ))}
               </Box>
             </Typography>
+
+            {price && (
+              <Typography variant="subtitle2" color="text.secondary">
+                {price}
+              </Typography>
+            )}
           </CardActionArea>
 
           {/* Zone 3: Description + Dates (visible sur onglet 1) */}
@@ -362,160 +312,12 @@ const WishlistItemCard = ({
             )}
           </Collapse>
 
-          {/* Zone 4: Informations de réservation (visible sur onglet 2/1 en mode offrir) */}
-          <Collapse in={activeTab === reservationTab && giftMode}>
-            {isReserved && (
-              <>
-                <Typography variant="h6" color="secondary" sx={{ textAlign: 'center', mt: 2 }}>
-                  🎁 Déjà réservé
-                </Typography>
-
-                {isEditingReservation ? (
-                  <TextField
-                    fullWidth
-                    placeholder="De la part de ?"
-                    helperText={
-                      <Box sx={{ lineHeight: 1.2 }}>
-                        Facultatif mais utile en cas de doublon, d'erreur, d'oubli, etc.
-                      </Box>
-                    }
-                    value={editedComment}
-                    onChange={e => setEditedComment(e.target.value)}
-                    multiline
-                    rows={1}
-                    size="small"
-                    sx={{ mt: 1.5, fontSize: '0.5rem' }}
-                  />
-                ) : (
-                  reservation?.comment && (
-                    <>
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                        De la part de :
-                      </Typography>
-                      <Box
-                        sx={{
-                          p: 1,
-                          bgcolor: 'action.hover',
-                          borderRadius: 1,
-                          borderLeft: 3,
-                          borderColor: 'primary.main',
-                        }}
-                      >
-                        <Typography variant="body1">{reservation.comment}</Typography>
-                      </Box>
-                    </>
-                  )
-                )}
-
-                <Box sx={{ mt: 2, display: 'flex', gap: 1, justifyContent: 'center' }}>
-                  {isEditingReservation ? (
-                    <Stack spacing={1}>
-                      <Button
-                        onClick={handleSaveEditedReservation}
-                        variant="contained"
-                        color="secondary"
-                        size="small"
-                      >
-                        Enregistrer
-                      </Button>
-                      <Button
-                        onClick={handleCancelEdit}
-                        variant="outlined"
-                        color="secondary"
-                        size="small"
-                      >
-                        Ne rien changer
-                      </Button>
-                    </Stack>
-                  ) : (
-                    <Stack spacing={1}>
-                      <Button
-                        onClick={handleEditReservation}
-                        variant="outlined"
-                        color="secondary"
-                        size="small"
-                      >
-                        Rectifier
-                      </Button>
-                      <Button
-                        onClick={handleCancelReservation}
-                        variant="outlined"
-                        color="primary"
-                        size="small"
-                      >
-                        Annuler la réservation
-                      </Button>
-                    </Stack>
-                  )}
-                </Box>
-              </>
-            )}
-
-            {!isReserved && (
-              <>
-                <Typography
-                  variant="subtitle1"
-                  sx={{ mt: 2, textAlign: 'center', display: 'block', lineHeight: 1 }}
-                >
-                  🎁<br />
-                  Vous êtes sur le point de réserver ce cadeau
-                </Typography>
-
-                <TextField
-                  fullWidth
-                  placeholder="De la part de ?"
-                  helperText={
-                    <Box sx={{ lineHeight: 1.2 }}>
-                      Facultatif mais utile en cas de doublon, d'erreur, d'oubli, etc.
-                    </Box>
-                  }
-                  value={reservationComment}
-                  onChange={e => setReservationComment(e.target.value)}
-                  multiline
-                  rows={1}
-                  size="small"
-                  sx={{ mt: 1.5, fontSize: '0.5rem' }}
-                />
-                <Box sx={{ mt: 2, display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                  <Button onClick={showPreviewTab} variant="outlined" color="primary">
-                    Annuler
-                  </Button>
-                  <Button onClick={handleReservationConfirm} variant="contained" color="secondary">
-                    Confirmer
-                  </Button>
-                </Box>
-              </>
-            )}
+          {/* Zone 4: Réservation, fournie par l'appelant (dernier onglet) */}
+          <Collapse in={activeTab === reservationTab && hasReservation}>
+            {renderReservation?.({ showPreview: showPreviewTab })}
           </Collapse>
         </CardContent>
       </Card>
-
-      {/* Dialog de confirmation d'annulation */}
-      <Dialog
-        open={showCancelDialog}
-        onClose={handleCloseCancelDialog}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">Confirmer l'annulation</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            Êtes-vous sûr de vouloir annuler la réservation de
-            <br />
-            <strong>{title}</strong> ?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseCancelDialog} color="secondary" variant="outlined">
-            Non, garder
-          </Button>
-          {/* Focus voulu : la modale vient d'être ouverte par l'utilisateur. */}
-          {/* oxlint-disable-next-line jsx-a11y/no-autofocus */}
-          <Button onClick={handleConfirmCancel} color="primary" variant="contained" autoFocus>
-            Oui, annuler
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };
