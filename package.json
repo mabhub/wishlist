@@ -2,6 +2,9 @@
   "name": "wishlist",
   "version": "0.0.0",
   "license": "MIT",
+  "exports": {
+    "./ui": "./src/ui/index.js"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
