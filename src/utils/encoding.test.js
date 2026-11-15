@@ -9,11 +9,12 @@ const UUID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
  *
  * @returns {string} UUID au format v4
  */
-const randomUuid = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, char => {
-  const rand = Math.floor(Math.random() * 16);
-  // eslint-disable-next-line no-bitwise
-  return (char === 'x' ? rand : (rand & 0x3) | 0x8).toString(16);
-});
+const randomUuid = () =>
+  'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, char => {
+    const rand = Math.floor(Math.random() * 16);
+    // eslint-disable-next-line no-bitwise
+    return (char === 'x' ? rand : (rand & 0x3) | 0x8).toString(16);
+  });
 
 /**
  * Encode un texte selon l'ancien format, basé sur un séparateur '|'.
@@ -87,9 +88,7 @@ describe('encodeComment', () => {
 
   it('produit des valeurs différentes pour un même texte', () => {
     const text = 'Benjamin';
-    const encodages = new Set(
-      Array.from({ length: 20 }, () => encodeComment(text, UUID)),
-    );
+    const encodages = new Set(Array.from({ length: 20 }, () => encodeComment(text, UUID)));
 
     // Le padding aléatoire empêche de reconnaître deux commentaires identiques
     expect(encodages.size).toBeGreaterThan(1);

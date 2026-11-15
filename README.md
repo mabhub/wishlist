@@ -17,12 +17,12 @@ npm run dev
 
 ## Commandes
 
-| Commande        | Rôle                              |
-|-----------------|-----------------------------------|
-| `npm run dev`   | serveur de développement          |
-| `npm run build` | build de production dans `dist/`  |
-| `npm test`      | tests unitaires (Vitest)          |
-| `npm run lint`  | ESLint                            |
+| Commande        | Rôle                             |
+| --------------- | -------------------------------- |
+| `npm run dev`   | serveur de développement         |
+| `npm run build` | build de production dans `dist/` |
+| `npm test`      | tests unitaires (Vitest)         |
+| `npm run lint`  | ESLint                           |
 
 ## Jeton Baserow
 

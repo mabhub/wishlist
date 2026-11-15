@@ -53,13 +53,10 @@ const useWishlist = () => {
 
   return useQuery({
     queryKey: ['wishlist', activeListId],
-    queryFn: async () => transformBaserowData(
-      await fetchAllBaserowRows(
-        BASEROW_CONFIG.tableId,
-        { list: activeListId },
-        'wishlist data',
+    queryFn: async () =>
+      transformBaserowData(
+        await fetchAllBaserowRows(BASEROW_CONFIG.tableId, { list: activeListId }, 'wishlist data'),
       ),
-    ),
     staleTime: 5 * 60 * 1000, // Cache 5 minutes
   });
 };

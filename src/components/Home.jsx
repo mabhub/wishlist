@@ -33,16 +33,16 @@ const noop = () => {};
  * n'a pas été pris en compte.
  */
 const RESERVATION_ERROR_MESSAGES = {
-  add: 'La réservation n\'a pas pu être enregistrée. Réessayez dans un instant.',
-  update: 'La modification n\'a pas pu être enregistrée. Réessayez dans un instant.',
-  cancel: 'L\'annulation n\'a pas pu être enregistrée. Réessayez dans un instant.',
+  add: "La réservation n'a pas pu être enregistrée. Réessayez dans un instant.",
+  update: "La modification n'a pas pu être enregistrée. Réessayez dans un instant.",
+  cancel: "L'annulation n'a pas pu être enregistrée. Réessayez dans un instant.",
 };
 
 /**
  * Message affiché quand quelqu'un a réservé le même cadeau juste avant.
  * Ce n'est pas une panne : la liste se met à jour et montre le cadeau réservé.
  */
-const ALREADY_RESERVED_MESSAGE = 'Ce cadeau vient d\'être réservé par quelqu\'un d\'autre.';
+const ALREADY_RESERVED_MESSAGE = "Ce cadeau vient d'être réservé par quelqu'un d'autre.";
 
 /**
  * Page d'accueil affichant la wishlist complète avec filtrage par catégories.
@@ -86,24 +86,26 @@ const Home = () => {
     ? ALREADY_RESERVED_MESSAGE
     : RESERVATION_ERROR_MESSAGES[mutationError?.action];
 
-  const handleCloseError = React.useCallback((event, reason) => {
-    // Un clic ailleurs dans la page ne doit pas faire disparaître l'alerte
-    // avant qu'elle ait pu être lue.
-    if (reason === 'clickaway') return;
-    setDismissedError(mutationError);
-  }, [mutationError]);
+  const handleCloseError = React.useCallback(
+    (event, reason) => {
+      // Un clic ailleurs dans la page ne doit pas faire disparaître l'alerte
+      // avant qu'elle ait pu être lue.
+      if (reason === 'clickaway') return;
+      setDismissedError(mutationError);
+    },
+    [mutationError],
+  );
 
   const handleChipClick = React.useCallback(
-    (category = 'all') => () => {
-      setDisabledCategories(
-        prevDisabledCategories => {
+    (category = 'all') =>
+      () => {
+        setDisabledCategories(prevDisabledCategories => {
           if (category === 'all') {
             return prevDisabledCategories.length ? [] : [...allCategories];
           }
           return toggle(prevDisabledCategories, category);
-        },
-      );
-    },
+        });
+      },
     [allCategories],
   );
 
@@ -161,8 +163,8 @@ const Home = () => {
   );
 
   const filteredItem = React.useMemo(
-    () => sortedItems.filter(
-      ({ categories = [], uuid }) => {
+    () =>
+      sortedItems.filter(({ categories = [], uuid }) => {
         // Filtrer par catégorie
         const isHiddenByCategory = categories.length
           ? categories.every(category => disabledCategories.includes(category))
@@ -177,8 +179,7 @@ const Home = () => {
         }
 
         return true;
-      },
-    ),
+      }),
     [disabledCategories, sortedItems, giftMode, hideReserved, reservations, allFiltersDisabled],
   );
 
@@ -193,9 +194,7 @@ const Home = () => {
   if (error) {
     return (
       <Container sx={{ py: 4 }}>
-        <Alert severity="error">
-          Erreur lors du chargement de la wishlist : {error.message}
-        </Alert>
+        <Alert severity="error">Erreur lors du chargement de la wishlist : {error.message}</Alert>
       </Container>
     );
   }
@@ -279,13 +278,9 @@ const Home = () => {
       {giftMode && (
         <Box sx={{ mb: 2 }}>
           <FormControlLabel
-            control={(
-              <Switch
-                checked={hideReserved}
-                onChange={toggleHideReserved}
-                color="primary"
-              />
-            )}
+            control={
+              <Switch checked={hideReserved} onChange={toggleHideReserved} color="primary" />
+            }
             label="Masquer les produits déjà réservés"
           />
         </Box>

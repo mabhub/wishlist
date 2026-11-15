@@ -1,10 +1,6 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  BASEROW_CONFIG,
-  fetchAllBaserowRows,
-  getBaserowFetchOptions,
-} from '../config/baserow';
+import { BASEROW_CONFIG, fetchAllBaserowRows, getBaserowFetchOptions } from '../config/baserow';
 import { encodeComment } from '../utils/encoding';
 import { ALREADY_RESERVED, buildReservationsMap, hasReservationFor } from '../utils/reservations';
 import useActiveListId from './useActiveListId';

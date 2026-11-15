@@ -1,7 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import {
-  fireEvent, render, screen, waitFor, within,
-} from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import WishlistItemCard from './WishlistItemCard';
 
 const ITEM = {
@@ -22,13 +20,13 @@ const commentField = () => screen.getByPlaceholderText('De la part de ?');
 
 describe('WishlistItemCard', () => {
   describe('onglets', () => {
-    it('n\'affiche aucun onglet sans description hors mode offrir', () => {
+    it("n'affiche aucun onglet sans description hors mode offrir", () => {
       render(<WishlistItemCard {...ITEM} />);
 
       expect(screen.queryByRole('tablist')).toBeNull();
     });
 
-    it('propose Aperçu et Détails quand l\'item a une description', () => {
+    it("propose Aperçu et Détails quand l'item a une description", () => {
       render(<WishlistItemCard {...ITEM} description={DESCRIPTION} />);
 
       expect(tabNames()).toEqual(['Aperçu', 'Détails']);
@@ -61,19 +59,22 @@ describe('WishlistItemCard', () => {
     it.each([
       ['sans description', undefined, ['Aperçu', 'Offrir']],
       ['avec description', DESCRIPTION, ['Aperçu', 'Détails', 'Offrir']],
-    ])('ajoute l\'onglet de réservation en dernier en mode offrir (%s)', (_, description, expected) => {
-      render(<WishlistItemCard {...ITEM} description={description} giftMode />);
+    ])(
+      "ajoute l'onglet de réservation en dernier en mode offrir (%s)",
+      (_, description, expected) => {
+        render(<WishlistItemCard {...ITEM} description={description} giftMode />);
 
-      expect(tabNames()).toEqual(expected);
-    });
+        expect(tabNames()).toEqual(expected);
+      },
+    );
 
-    it('nomme l\'onglet « Réservé » quand le cadeau est pris', () => {
+    it("nomme l'onglet « Réservé » quand le cadeau est pris", () => {
       render(<WishlistItemCard {...ITEM} giftMode isReserved reservation={RESERVATION} />);
 
       expect(tabNames()).toEqual(['Aperçu', 'Réservé']);
     });
 
-    it('montre un indicateur à la place de l\'onglet de réservation pendant le chargement', () => {
+    it("montre un indicateur à la place de l'onglet de réservation pendant le chargement", () => {
       render(<WishlistItemCard {...ITEM} giftMode isLoadingReservations />);
 
       const tabs = screen.getAllByRole('tab');
@@ -83,7 +84,7 @@ describe('WishlistItemCard', () => {
       expect(screen.queryByRole('tab', { name: 'Offrir' })).toBeNull();
     });
 
-    it('revient à l\'aperçu quand le mode offrir se désactive', () => {
+    it("revient à l'aperçu quand le mode offrir se désactive", () => {
       const { rerender } = render(
         <WishlistItemCard {...ITEM} description={DESCRIPTION} giftMode />,
       );
@@ -101,7 +102,7 @@ describe('WishlistItemCard', () => {
     it.each([
       ['sans description', undefined],
       ['avec description', DESCRIPTION],
-    ])('n\'ouvre le formulaire que sur l\'onglet Offrir (%s)', (_, description) => {
+    ])("n'ouvre le formulaire que sur l'onglet Offrir (%s)", (_, description) => {
       render(<WishlistItemCard {...ITEM} description={description} giftMode />);
 
       expect(screen.queryByRole('button', { name: 'Confirmer' })).toBeNull();
@@ -112,7 +113,7 @@ describe('WishlistItemCard', () => {
       expect(screen.getByRole('button', { name: 'Confirmer' })).toBeTruthy();
     });
 
-    it('ouvre le formulaire depuis la pastille « Réserver » de l\'image', () => {
+    it("ouvre le formulaire depuis la pastille « Réserver » de l'image", () => {
       render(<WishlistItemCard {...ITEM} description={DESCRIPTION} giftMode />);
 
       clickButton('Réserver');
@@ -120,7 +121,7 @@ describe('WishlistItemCard', () => {
       expect(selectedTab()).toBe('Offrir');
     });
 
-    it('transmet l\'item et le commentaire saisi, puis revient à l\'aperçu', () => {
+    it("transmet l'item et le commentaire saisi, puis revient à l'aperçu", () => {
       const onReserve = vi.fn();
       render(<WishlistItemCard {...ITEM} giftMode onReserve={onReserve} />);
 
@@ -128,7 +129,10 @@ describe('WishlistItemCard', () => {
       fireEvent.change(commentField(), { target: { value: 'Tata Jeanne' } });
       clickButton('Confirmer');
 
-      expect(onReserve).toHaveBeenCalledExactlyOnceWith({ wishId: ITEM.uuid, comment: 'Tata Jeanne' });
+      expect(onReserve).toHaveBeenCalledExactlyOnceWith({
+        wishId: ITEM.uuid,
+        comment: 'Tata Jeanne',
+      });
       expect(selectedTab()).toBe('Aperçu');
       expect(commentField().value).toBe('');
     });
@@ -194,7 +198,7 @@ describe('WishlistItemCard', () => {
       expect(screen.getByText('Tata Jeanne')).toBeTruthy();
     });
 
-    it('demande confirmation avant d\'annuler la réservation', async () => {
+    it("demande confirmation avant d'annuler la réservation", async () => {
       const onCancelReservation = vi.fn();
       renderReserved({ onCancelReservation });
 
@@ -217,7 +221,9 @@ describe('WishlistItemCard', () => {
       renderReserved({ onCancelReservation });
 
       clickButton('Annuler la réservation');
-      fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Non, garder' }));
+      fireEvent.click(
+        within(screen.getByRole('dialog')).getByRole('button', { name: 'Non, garder' }),
+      );
 
       await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
       expect(onCancelReservation).not.toHaveBeenCalled();

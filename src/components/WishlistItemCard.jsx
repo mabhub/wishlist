@@ -23,7 +23,8 @@ import {
 import ReactMarkdown from 'react-markdown';
 import CategoryChip from './CategoryChip';
 
-const blankImage = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect x="0" y="0" width="200" height="200" fill="white" /></svg>';
+const blankImage =
+  'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect x="0" y="0" width="200" height="200" fill="white" /></svg>';
 
 /**
  * Composant affichant un item de wishlist en mode vignette (card).
@@ -184,7 +185,9 @@ const WishlistItemCard = ({
             <Tab label="Aperçu" />
             {detailsTab > 0 && <Tab label="Détails" />}
             {isLoadingReservations && <Tab label={<CircularProgress size={16} />} />}
-            {giftMode && !isLoadingReservations && (<Tab label={isReserved ? 'Réservé' : 'Offrir'} />)}
+            {giftMode && !isLoadingReservations && (
+              <Tab label={isReserved ? 'Réservé' : 'Offrir'} />
+            )}
           </Tabs>
         )}
 
@@ -265,7 +268,9 @@ const WishlistItemCard = ({
           </Box>
         </Collapse>
 
-        <CardContent sx={{ flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+        <CardContent
+          sx={{ flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}
+        >
           {/* Zone 2: Titre (toujours visible) */}
           <CardActionArea
             component="a"
@@ -286,16 +291,13 @@ const WishlistItemCard = ({
             )}
 
             <Typography variant="h6" component="h2" sx={{ lineHeight: 1.2 }} gutterBottom>
-              {qty > 1 && <Chip size="small" color="secondary" label={`${qty}×`} sx={{ mr: 0.5, mb: 0.5 }} />}
+              {qty > 1 && (
+                <Chip size="small" color="secondary" label={`${qty}×`} sx={{ mr: 0.5, mb: 0.5 }} />
+              )}
               {title}{' '}
               <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
                 {categories.map(category => (
-                  <CategoryChip
-                    variant="dot"
-                    label={category}
-                    key={category}
-                    sx={{ mr: 0.25 }}
-                  />
+                  <CategoryChip variant="dot" label={category} key={category} sx={{ mr: 0.25 }} />
                 ))}
               </Box>
             </Typography>
@@ -321,15 +323,39 @@ const WishlistItemCard = ({
             {(createdOn || lastModifiedOn) && (
               <Stack sx={{ mt: 2, pt: 2, opacity: 0.4 }} direction="row">
                 {createdOn && (
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1, letterSpacing: -0.05 }}>
-                    Créé le<br />
-                    {new Date(createdOn).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: 'block', lineHeight: 1, letterSpacing: -0.05 }}
+                  >
+                    Créé le
+                    <br />
+                    {new Date(createdOn).toLocaleDateString('fr-FR', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })}
                   </Typography>
                 )}
                 {lastModifiedOn && (
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'right', ml: 'auto', lineHeight: 1, letterSpacing: -0.05 }}>
-                    Modifié le<br />
-                    {new Date(lastModifiedOn).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{
+                      display: 'block',
+                      textAlign: 'right',
+                      ml: 'auto',
+                      lineHeight: 1,
+                      letterSpacing: -0.05,
+                    }}
+                  >
+                    Modifié le
+                    <br />
+                    {new Date(lastModifiedOn).toLocaleDateString('fr-FR', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })}
                   </Typography>
                 )}
               </Stack>
@@ -348,11 +374,11 @@ const WishlistItemCard = ({
                   <TextField
                     fullWidth
                     placeholder="De la part de ?"
-                    helperText={(
+                    helperText={
                       <Box sx={{ lineHeight: 1.2 }}>
                         Facultatif mais utile en cas de doublon, d'erreur, d'oubli, etc.
                       </Box>
-                    )}
+                    }
                     value={editedComment}
                     onChange={e => setEditedComment(e.target.value)}
                     multiline
@@ -427,7 +453,10 @@ const WishlistItemCard = ({
 
             {!isReserved && (
               <>
-                <Typography variant="subtitle1" sx={{ mt: 2, textAlign: 'center', display: 'block', lineHeight: 1 }}>
+                <Typography
+                  variant="subtitle1"
+                  sx={{ mt: 2, textAlign: 'center', display: 'block', lineHeight: 1 }}
+                >
                   🎁<br />
                   Vous êtes sur le point de réserver ce cadeau
                 </Typography>
@@ -435,32 +464,23 @@ const WishlistItemCard = ({
                 <TextField
                   fullWidth
                   placeholder="De la part de ?"
-                  helperText={(
+                  helperText={
                     <Box sx={{ lineHeight: 1.2 }}>
                       Facultatif mais utile en cas de doublon, d'erreur, d'oubli, etc.
                     </Box>
-                  )}
+                  }
                   value={reservationComment}
                   onChange={e => setReservationComment(e.target.value)}
                   multiline
                   rows={1}
                   size="small"
                   sx={{ mt: 1.5, fontSize: '0.5rem' }}
-
                 />
                 <Box sx={{ mt: 2, display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                  <Button
-                    onClick={showPreviewTab}
-                    variant="outlined"
-                    color="primary"
-                  >
+                  <Button onClick={showPreviewTab} variant="outlined" color="primary">
                     Annuler
                   </Button>
-                  <Button
-                    onClick={handleReservationConfirm}
-                    variant="contained"
-                    color="secondary"
-                  >
+                  <Button onClick={handleReservationConfirm} variant="contained" color="secondary">
                     Confirmer
                   </Button>
                 </Box>
@@ -477,12 +497,11 @@ const WishlistItemCard = ({
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
-        <DialogTitle id="alert-dialog-title">
-          Confirmer l'annulation
-        </DialogTitle>
+        <DialogTitle id="alert-dialog-title">Confirmer l'annulation</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
-            Êtes-vous sûr de vouloir annuler la réservation de<br />
+            Êtes-vous sûr de vouloir annuler la réservation de
+            <br />
             <strong>{title}</strong> ?
           </DialogContentText>
         </DialogContent>

@@ -9,8 +9,9 @@ export default defineConfig({
     rolldownOptions: {
       // mdast-util-to-hast laisse des `''` en tête de module pour VS Code :
       // Rolldown les prend pour des directives, sans conséquence sur le bundle.
-      onwarn (warning, warn) {
-        if (warning.code === 'MODULE_LEVEL_DIRECTIVE' && warning.id?.includes('/node_modules/')) return;
+      onwarn(warning, warn) {
+        if (warning.code === 'MODULE_LEVEL_DIRECTIVE' && warning.id?.includes('/node_modules/'))
+          return;
         warn(warning);
       },
       output: {

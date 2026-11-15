@@ -26,14 +26,15 @@ const LEGACY_SEPARATOR = '|';
  * @param {string} key - Clé de transformation (répétée si plus courte)
  * @returns {string} Texte transformé
  */
-const xorWithKey = (text, key) => text
-  .split('')
-  .map((char, i) => {
-    // eslint-disable-next-line no-bitwise
-    const charCode = char.charCodeAt(0) ^ key.charCodeAt(i % key.length);
-    return String.fromCharCode(charCode);
-  })
-  .join('');
+const xorWithKey = (text, key) =>
+  text
+    .split('')
+    .map((char, i) => {
+      // eslint-disable-next-line no-bitwise
+      const charCode = char.charCodeAt(0) ^ key.charCodeAt(i % key.length);
+      return String.fromCharCode(charCode);
+    })
+    .join('');
 
 /**
  * Génère un padding aléatoire de longueur variable.

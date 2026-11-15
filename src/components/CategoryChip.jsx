@@ -16,10 +16,7 @@ const getCategoryProps = ({ label, sx = {}, ...props }) => {
     return { ...props, label, sx };
   }
 
-  const {
-    sx: customSx,
-    ...customProps
-  } = categoryProps[label];
+  const { sx: customSx, ...customProps } = categoryProps[label];
 
   return {
     ...props,
