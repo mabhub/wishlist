@@ -76,11 +76,10 @@ const Home = () => {
 
   // L'ouverture est découplée de l'erreur : celle-ci n'est effacée qu'après
   // la transition de sortie, sinon l'alerte se viderait pendant le fondu.
-  const [isErrorOpen, setIsErrorOpen] = React.useState(false);
-
-  React.useEffect(() => {
-    if (mutationError) setIsErrorOpen(true);
-  }, [mutationError]);
+  // Chaque échec est un nouvel objet : l'alerte reste ouverte tant que l'erreur
+  // courante n'est pas celle qu'on vient de fermer.
+  const [dismissedError, setDismissedError] = React.useState(null);
+  const isErrorOpen = mutationError !== null && mutationError !== dismissedError;
 
   const isAlreadyReserved = mutationError?.error?.code === ALREADY_RESERVED;
   const errorMessage = isAlreadyReserved
@@ -91,8 +90,8 @@ const Home = () => {
     // Un clic ailleurs dans la page ne doit pas faire disparaître l'alerte
     // avant qu'elle ait pu être lue.
     if (reason === 'clickaway') return;
-    setIsErrorOpen(false);
-  }, []);
+    setDismissedError(mutationError);
+  }, [mutationError]);
 
   const handleChipClick = React.useCallback(
     (category = 'all') => () => {

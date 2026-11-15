@@ -80,12 +80,12 @@ const WishlistItemCard = ({
   const detailsTab = description ? 1 : -1;
   const reservationTab = description ? 2 : 1;
 
-  // Réinitialiser l'onglet actif quand le mode offrir est désactivé
-  React.useEffect(() => {
-    if (!giftMode && activeTab >= reservationTab) {
-      setActiveTab(PREVIEW_TAB);
-    }
-  }, [giftMode, activeTab, reservationTab]);
+  // Revenir à l'aperçu quand le mode offrir est désactivé. Fait pendant le rendu
+  // et non dans un effet : React relance aussitôt le rendu, et `Tabs` ne reçoit
+  // jamais l'index d'un onglet de réservation qui n'existe plus.
+  if (!giftMode && activeTab >= reservationTab) {
+    setActiveTab(PREVIEW_TAB);
+  }
 
   const handleTabChange = React.useCallback((event, newValue) => {
     setActiveTab(newValue);
