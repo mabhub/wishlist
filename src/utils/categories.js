@@ -36,7 +36,8 @@ export const CATEGORY_COLORS = ['primary', 'secondary', 'error', 'warning', 'inf
 /**
  * Couleur du thème d'une catégorie : celle de `categoryProps` si elle y figure, sinon
  * une couleur de `CATEGORY_COLORS` tirée du nom, donc stable d'un affichage à l'autre.
- * Utile quand les catégories viennent d'une source libre (listes mesenvies.fr).
+ * Utile quand les catégories viennent d'une source libre (saisies par l'utilisateur ou
+ * importées d'un autre site).
  *
  * @param {string} label - Nom de la catégorie
  * @returns {string} Nom d'une couleur de la palette du thème
