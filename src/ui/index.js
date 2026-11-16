@@ -3,7 +3,9 @@
  * aux données. Rien de ce qui est exporté ici ne doit dépendre de Baserow.
  *
  * Les fichiers sont publiés en source (JSX) : le projet consommateur les transforme
- * lui-même et doit dédupliquer React, MUI et Emotion (`resolve.dedupe` de Vite).
+ * lui-même. Installée depuis git, la bibliothèque partage React, MUI et Emotion avec
+ * lui ; liée par `file:` (dépôt qui a ses propres `node_modules`), il faut les
+ * dédupliquer (`resolve.dedupe` de Vite).
  */
 export { theme } from './theme';
 export { default as CategoryChip } from '../components/CategoryChip';
