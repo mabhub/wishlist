@@ -72,6 +72,15 @@ describe('WishlistItemCard', () => {
   });
 
   describe('prix', () => {
+    it("remplace une image qui ne charge pas par un fond blanc, sans texte alternatif visible", () => {
+      render(<WishlistItemCard {...ITEM} picture="https://example.org/absente.jpg" />);
+      const image = screen.getByRole('img', { name: ITEM.title });
+
+      expect(image.getAttribute('src')).toBe('https://example.org/absente.jpg');
+      fireEvent.error(image);
+      expect(image.getAttribute('src')).toMatch(/^data:image\/svg\+xml/);
+    });
+
     it("affiche le prix tel que fourni par l'appelant", () => {
       render(<WishlistItemCard {...ITEM} price="29,90 €" />);
 

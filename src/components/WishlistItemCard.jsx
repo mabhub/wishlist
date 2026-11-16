@@ -61,6 +61,9 @@ const WishlistItemCard = ({
   sx = {},
 }) => {
   const [activeTab, setActiveTab] = React.useState(0);
+  // Image de l'item qui n'a pas pu se charger (lien mort, hôte qui refuse le hotlink) :
+  // la carte montre alors le fond blanc plutôt que le texte alternatif.
+  const [failedPicture, setFailedPicture] = React.useState();
   const hasReservation = Boolean(renderReservation);
 
   // Index des onglets : l'onglet Détails n'existe que si une description est
@@ -140,8 +143,9 @@ const WishlistItemCard = ({
           <Box sx={{ position: 'relative' }}>
             <CardMedia
               component="img"
-              image={picture || blankImage}
+              image={picture && picture !== failedPicture ? picture : blankImage}
               alt={title}
+              onError={() => setFailedPicture(picture)}
               sx={{
                 width: '100%',
                 aspectRatio: '1',
