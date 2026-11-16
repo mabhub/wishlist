@@ -42,6 +42,15 @@ describe('WishlistView', () => {
     expect(titles()).toEqual(['Roman', 'Puzzle', 'Sans catégorie']);
   });
 
+  it('colore chaque catégorie, mais pas le chip « Tout »', () => {
+    render(<FilteredView />);
+
+    expect(chip('Tout').className).toContain('MuiChip-colorDefault');
+    CATEGORIES.forEach(category => {
+      expect(chip(category).className).not.toContain('MuiChip-colorDefault');
+    });
+  });
+
   it('filtre par catégorie et indique les chips actifs', () => {
     render(<FilteredView />);
 

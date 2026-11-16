@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Chip, Tooltip, useTheme } from '@mui/material';
 import { categoryProps } from '../constants/categories';
+import { categoryColor } from '../utils/categories';
 
 /**
  * Fusionne les props customisées d'une catégorie avec les props passées.
@@ -13,7 +14,8 @@ import { categoryProps } from '../constants/categories';
  */
 const getCategoryProps = ({ label, sx = {}, ...props }) => {
   if (!categoryProps[label]) {
-    return { ...props, label, sx };
+    // Une couleur passée par l'appelant (`default` pour « Tout ») l'emporte.
+    return { color: categoryColor(label), ...props, label, sx };
   }
 
   const { sx: customSx, ...customProps } = categoryProps[label];
@@ -43,10 +45,10 @@ const CategoryChip = ({ label, variant = 'chip', ...props }) => {
 
   if (variant === 'dot') {
     const { sx: dotSx, ...dotProps } = props;
-    const color = categoryProps[label]?.color;
+    const color = categoryColor(label);
     // Lire la palette du thème plutôt que des hex figés : le thème du projet
     // redéfinit primary et secondary, des valeurs en dur les désaccorderaient.
-    const bgColor = theme.palette[color]?.main || theme.palette.grey[600];
+    const bgColor = theme.palette[color].main;
 
     return (
       <Tooltip title={label} arrow>

@@ -58,6 +58,7 @@ const WishlistView = ({
       <Box sx={{ flexGrow: 1 }}>
         <CategoryChip
           label="Tout"
+          color="default"
           onClick={() => onCategoryClick?.()}
           aria-pressed={disabledCategories.length === 0}
         />

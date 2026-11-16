@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isVisibleInCategories } from './categories';
+import { CATEGORY_COLORS, categoryColor, isVisibleInCategories } from './categories';
 
 const ALL = ['Livre', 'Jeu', 'Musique'];
 
@@ -25,5 +25,25 @@ describe('isVisibleInCategories', () => {
 
   it('affiche un item sans catégorie quand la liste n’en a aucune', () => {
     expect(isVisibleInCategories([], [], [])).toBe(true);
+  });
+});
+
+describe('categoryColor', () => {
+  it('garde la couleur d’une catégorie connue', () => {
+    expect(categoryColor('Vinyle')).toBe('primary');
+    expect(categoryColor('BD')).toBe('error');
+  });
+
+  it('donne toujours la même couleur du thème à une catégorie inconnue', () => {
+    const color = categoryColor('Beauté / Hygiène');
+
+    expect(CATEGORY_COLORS).toContain(color);
+    expect(categoryColor('Beauté / Hygiène')).toBe(color);
+  });
+
+  it('répartit des catégories inconnues sur plusieurs couleurs', () => {
+    const labels = ['Beauté / Hygiène', 'Loisirs créatifs', 'Couture / Tricot', 'Divers', 'Jeux'];
+
+    expect(new Set(labels.map(categoryColor)).size).toBeGreaterThan(2);
   });
 });

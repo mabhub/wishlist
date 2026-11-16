@@ -1,3 +1,5 @@
+import { categoryProps } from '../constants/categories';
+
 /**
  * Indique si un item reste visible selon les catégories désactivées dans le filtre.
  *
@@ -24,4 +26,29 @@ export const isVisibleInCategories = (
   }
 
   return !(allCategories.length > 0 && disabledCategories.length === allCategories.length);
+};
+
+/**
+ * Couleurs du thème attribuées aux catégories sans configuration dans `categoryProps`.
+ */
+export const CATEGORY_COLORS = ['primary', 'secondary', 'error', 'warning', 'info', 'success'];
+
+/**
+ * Couleur du thème d'une catégorie : celle de `categoryProps` si elle y figure, sinon
+ * une couleur de `CATEGORY_COLORS` tirée du nom, donc stable d'un affichage à l'autre.
+ * Utile quand les catégories viennent d'une source libre (listes mesenvies.fr).
+ *
+ * @param {string} label - Nom de la catégorie
+ * @returns {string} Nom d'une couleur de la palette du thème
+ *
+ * @example
+ * categoryColor('Vinyle') // 'primary'
+ */
+export const categoryColor = label => {
+  if (categoryProps[label]?.color) {
+    return categoryProps[label].color;
+  }
+
+  const hash = [...label].reduce((acc, char) => (acc * 31 + char.codePointAt(0)) % 1_000_003, 0);
+  return CATEGORY_COLORS[hash % CATEGORY_COLORS.length];
 };
